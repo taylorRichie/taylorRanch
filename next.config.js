@@ -1,10 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export',
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   images: { unoptimized: true },
-};
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: 'https://wu.ly/reveal_gallery/api/:path*'
+      }
+    ]
+  }
+}
 
-module.exports = nextConfig;
+module.exports = nextConfig

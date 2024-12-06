@@ -16,47 +16,48 @@ import {
 } from "@/components/ui/select";
 import { CalendarIcon, FilterIcon, XIcon } from "lucide-react";
 import { useState } from "react";
-import { FilterOptions } from "@/types";
 import { DateRange } from "react-day-picker";
 import { addDays } from "date-fns";
 import { cn } from "@/lib/utils";
+import { Location, ImageFilters } from "@/lib/api";
 
 interface FilterBarProps {
-  onFilterChange: (filters: FilterOptions) => void;
-  locations: string[];
+  onFilterChange: (filters: Partial<ImageFilters>) => void;
+  locations: Location[];
+  currentFilters?: Partial<ImageFilters>;
 }
 
-export function FilterBar({ onFilterChange, locations }: FilterBarProps) {
-  const [dateRange, setDateRange] = useState<DateRange | undefined>();
-  const [location, setLocation] = useState<string>();
+export function FilterBar({ onFilterChange, locations, currentFilters = {} }: FilterBarProps) {
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(() => {
+    if (currentFilters?.start_date && currentFilters?.end_date) {
+      return {
+        from: new Date(currentFilters.start_date),
+        to: new Date(currentFilters.end_date)
+      };
+    }
+    return undefined;
+  });
 
   const handleDateRangeChange = (range: DateRange | undefined) => {
     setDateRange(range);
     onFilterChange({ 
-      dateRange: range ? {
-        start: range.from!,
-        end: range.to || addDays(range.from!, 1)
-      } : undefined,
-      location 
+      start_date: range?.from?.toISOString(),
+      end_date: range?.to?.toISOString() || (range?.from ? addDays(range.from, 1).toISOString() : undefined)
     });
   };
 
   const handleLocationChange = (newLocation: string) => {
     const locationValue = newLocation === 'all' ? undefined : newLocation;
-    setLocation(locationValue);
-    onFilterChange({ 
-      dateRange: dateRange ? {
-        start: dateRange.from!,
-        end: dateRange.to || addDays(dateRange.from!, 1)
-      } : undefined,
-      location: locationValue
-    });
+    onFilterChange({ location: locationValue });
   };
 
   const clearFilters = () => {
     setDateRange(undefined);
-    setLocation(undefined);
-    onFilterChange({});
+    onFilterChange({
+      start_date: undefined,
+      end_date: undefined,
+      location: undefined
+    });
   };
 
   return (
@@ -95,21 +96,26 @@ export function FilterBar({ onFilterChange, locations }: FilterBarProps) {
         </PopoverContent>
       </Popover>
 
-      <Select value={location} onValueChange={handleLocationChange}>
+      <Select 
+        value={currentFilters?.location || 'all'} 
+        onValueChange={handleLocationChange}
+      >
         <SelectTrigger className="w-[180px]">
           <SelectValue placeholder="Select location" />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All Locations</SelectItem>
           {locations.map((loc) => (
-            <SelectItem key={loc} value={loc}>
-              {loc}
+            <SelectItem key={loc.primary_location} value={loc.primary_location}>
+              {loc.secondary_location 
+                ? `${loc.primary_location} - ${loc.secondary_location}`
+                : loc.primary_location}
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
 
-      {(dateRange || location) && (
+      {(dateRange || currentFilters?.location) && (
         <Button
           variant="ghost"
           size="icon"
