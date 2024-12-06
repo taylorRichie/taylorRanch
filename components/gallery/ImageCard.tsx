@@ -2,10 +2,12 @@
 
 import { GalleryImage } from "@/lib/api";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import NextImage from "next/image";
 import { cn } from "@/lib/utils";
-import { ImageMetadata } from "./ImageMetadata";
 import { format } from "date-fns";
+import { Heart } from "lucide-react";
+import { useFavorites } from "@/hooks/useFavorites";
 
 interface ImageCardProps {
   image: GalleryImage;
@@ -15,11 +17,20 @@ interface ImageCardProps {
 }
 
 export function ImageCard({ image, isLoaded, onLoad, onClick }: ImageCardProps) {
+  const { isFavorite, toggleFavorite, isInitialized } = useFavorites();
   const captureDate = new Date(image.capture_time);
   const formattedDate = format(captureDate, 'MMM d, yyyy h:mm a');
   const locationDisplay = image.secondary_location 
     ? `${image.primary_location} - ${image.secondary_location}`
     : image.primary_location;
+
+  const handleFavoriteClick = (e: React.MouseEvent) => {
+    if (!isInitialized) return;
+    e.stopPropagation(); // Prevent card click when clicking heart
+    toggleFavorite(image.id);
+  };
+
+  const isImageFavorite = isFavorite(image.id);
 
   return (
     <Card 
@@ -44,12 +55,26 @@ export function ImageCard({ image, isLoaded, onLoad, onClick }: ImageCardProps) 
           unoptimized
         />
       </CardContent>
-      <CardFooter className="flex flex-col items-start gap-2 p-4">
-        <div className="w-full">
+      <CardFooter className="flex justify-between items-center p-4">
+        <div className="flex flex-col items-start gap-1">
           <p className="text-sm font-medium">{formattedDate}</p>
           <p className="text-sm text-muted-foreground">{locationDisplay}</p>
-          <ImageMetadata image={image} />
         </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          className={cn(
+            "h-8 w-8",
+            isInitialized && isImageFavorite && "text-red-500 hover:text-red-600"
+          )}
+          onClick={handleFavoriteClick}
+          disabled={!isInitialized}
+        >
+          <Heart className={cn(
+            "h-5 w-5",
+            isInitialized && isImageFavorite && "fill-current"
+          )} />
+        </Button>
       </CardFooter>
     </Card>
   );

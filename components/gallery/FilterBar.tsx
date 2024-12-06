@@ -14,20 +14,30 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CalendarIcon, FilterIcon, XIcon } from "lucide-react";
-import { useState } from "react";
+import { CalendarIcon, FilterIcon, XIcon, Heart } from "lucide-react";
+import { useState, useMemo } from "react";
 import { DateRange } from "react-day-picker";
 import { addDays } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Location, ImageFilters } from "@/lib/api";
+import { useFavorites } from "@/hooks/useFavorites";
 
 interface FilterBarProps {
   onFilterChange: (filters: Partial<ImageFilters>) => void;
   locations: Location[];
   currentFilters?: Partial<ImageFilters>;
+  showFavorites?: boolean;
+  onToggleFavorites?: () => void;
 }
 
-export function FilterBar({ onFilterChange, locations, currentFilters = {} }: FilterBarProps) {
+export function FilterBar({ 
+  onFilterChange, 
+  locations, 
+  currentFilters = {},
+  showFavorites = false,
+  onToggleFavorites
+}: FilterBarProps) {
+  const { favorites, isInitialized } = useFavorites();
   const [dateRange, setDateRange] = useState<DateRange | undefined>(() => {
     if (currentFilters?.start_date && currentFilters?.end_date) {
       return {
@@ -37,6 +47,10 @@ export function FilterBar({ onFilterChange, locations, currentFilters = {} }: Fi
     }
     return undefined;
   });
+
+  const favoritesCount = useMemo(() => 
+    isInitialized ? favorites.length : 0
+  , [favorites.length, isInitialized]);
 
   const handleDateRangeChange = (range: DateRange | undefined) => {
     setDateRange(range);
@@ -61,9 +75,24 @@ export function FilterBar({ onFilterChange, locations, currentFilters = {} }: Fi
   };
 
   return (
-    <div className="flex items-center gap-4 p-4 bg-card rounded-lg shadow-sm">
+    <div className="flex items-center gap-4">
       <FilterIcon className="w-5 h-5 text-muted-foreground" />
       
+      <Button
+        variant="outline"
+        className={cn(
+          "gap-2",
+          showFavorites && "bg-primary/10 hover:bg-primary/20"
+        )}
+        onClick={onToggleFavorites}
+      >
+        <Heart className={cn(
+          "h-4 w-4",
+          showFavorites && "fill-current"
+        )} />
+        Favorites ({favoritesCount})
+      </Button>
+
       <Popover>
         <PopoverTrigger asChild>
           <Button variant="outline" className={cn(
