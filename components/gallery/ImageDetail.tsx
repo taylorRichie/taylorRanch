@@ -53,11 +53,33 @@ export function ImageDetail({
     return new File(byteArrays, filename, { type: contentType });
   };
 
-  const handleDownload = useCallback(() => {
+  const handleDownload = useCallback(async () => {
     if (!image) return;
+    
     const filename = `${image.primary_location}-${format(new Date(image.capture_time), 'yyyy-MM-dd-HH-mm-ss')}.jpg`;
-    const downloadUrl = `/api/download?url=${encodeURIComponent(image.cdn_url)}&filename=${encodeURIComponent(filename)}`;
-    window.location.href = downloadUrl;
+    
+    // Check if Web Share API is available
+    if (navigator.share && /mobile/i.test(navigator.userAgent)) {
+      try {
+        // Fetch the image first
+        const response = await fetch(image.cdn_url);
+        const blob = await response.blob();
+        const file = new File([blob], filename, { type: 'image/jpeg' });
+
+        await navigator.share({
+          title: filename,
+          text: `Image from ${image.primary_location}`,
+          files: [file]
+        });
+      } catch (error) {
+        // If share fails (user cancels or error), fall back to download
+        console.error('Error sharing:', error);
+        window.location.href = `/api/download?url=${encodeURIComponent(image.cdn_url)}&filename=${encodeURIComponent(filename)}`;
+      }
+    } else {
+      // Fall back to regular download on desktop or if share API is not available
+      window.location.href = `/api/download?url=${encodeURIComponent(image.cdn_url)}&filename=${encodeURIComponent(filename)}`;
+    }
   }, [image]);
 
   const handlePrevious = useCallback(() => {
