@@ -133,6 +133,22 @@ export function ImageDetail({
     onTouchEnd: handleTouchEnd,
   };
 
+  // Add keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft' && showPrevious && !isAnimating) {
+        handlePrevious();
+      } else if (e.key === 'ArrowRight' && showNext && !isAnimating) {
+        handleNext();
+      } else if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handlePrevious, handleNext, showPrevious, showNext, isAnimating, onClose]);
+
   if (!image) return null;
 
   return (
