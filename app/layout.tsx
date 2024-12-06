@@ -11,8 +11,8 @@ const fontSans = FontSans({
 });
 
 export const metadata: Metadata = {
-  title: 'Trail Camera Gallery',
-  description: 'A modern web interface for displaying and analyzing trail camera images',
+  title: 'Taylor Ranch est 2017',
+  description: 'Trail camera gallery for Taylor Ranch',
 };
 
 export default function RootLayout({
