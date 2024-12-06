@@ -9,6 +9,7 @@ import { useState, useCallback, TouchEvent, useEffect, useRef } from "react";
 import { ImageMetadata } from "./ImageMetadata";
 import { GalleryImage } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import * as FileSaver from 'file-saver';
 
 interface ImageDetailProps {
   image: GalleryImage | null;
@@ -31,6 +32,33 @@ export function ImageDetail({
   const [slideDirection, setSlideDirection] = useState<'left' | 'right' | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const base64ToFile = (base64Data: string, filename: string, contentType: string) => {
+    const sliceSize = 1024;
+    const byteCharacters = atob(base64Data);
+    const bytesLength = byteCharacters.length;
+    const slicesCount = Math.ceil(bytesLength / sliceSize);
+    const byteArrays = new Array(slicesCount);
+
+    for (let sliceIndex = 0; sliceIndex < slicesCount; ++sliceIndex) {
+      const begin = sliceIndex * sliceSize;
+      const end = Math.min(begin + sliceSize, bytesLength);
+
+      const bytes = new Array(end - begin);
+      for (let offset = begin, i = 0; offset < end; ++i, ++offset) {
+        bytes[i] = byteCharacters[offset].charCodeAt(0);
+      }
+      byteArrays[sliceIndex] = new Uint8Array(bytes);
+    }
+    return new File(byteArrays, filename, { type: contentType });
+  };
+
+  const handleDownload = useCallback(() => {
+    if (!image) return;
+    const filename = `${image.primary_location}-${format(new Date(image.capture_time), 'yyyy-MM-dd-HH-mm-ss')}.jpg`;
+    const downloadUrl = `/api/download?url=${encodeURIComponent(image.cdn_url)}&filename=${encodeURIComponent(filename)}`;
+    window.location.href = downloadUrl;
+  }, [image]);
 
   const handlePrevious = useCallback(() => {
     if (onPrevious && !isAnimating) {
@@ -203,7 +231,15 @@ export function ImageDetail({
               </div>
 
               {/* Controls */}
-              <div className="absolute right-4 bottom-12 z-50">
+              <div className="absolute right-4 bottom-12 z-50 flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handleDownload}
+                  className="h-9 w-9"
+                >
+                  <Download className="h-4 w-4" />
+                </Button>
                 <DialogClose asChild>
                   <Button 
                     variant="outline" 
@@ -219,7 +255,10 @@ export function ImageDetail({
           </div>
 
           {/* Sidebar - desktop and landscape */}
-          <div className="hidden landscape:flex md:flex flex-col w-64 bg-background/80 backdrop-blur-sm border-l">
+          <div className={cn(
+            "hidden landscape:flex md:flex flex-col w-64 bg-background/80 backdrop-blur-sm border-l",
+            isFullscreen && "landscape:hidden"
+          )}>
             <div className="p-4 flex-1">
               <div className="space-y-2">
                 <p className="text-sm font-medium">
@@ -258,7 +297,7 @@ export function ImageDetail({
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => window.open(image.cdn_url, '_blank')}
+                onClick={handleDownload}
                 className="h-8 w-8"
               >
                 <Download className="h-4 w-4" />
@@ -290,6 +329,14 @@ export function ImageDetail({
 
           {/* Bottom right controls - always visible */}
           <div className="absolute bottom-4 right-4 z-50 flex items-center gap-2 portrait:hidden">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleDownload}
+              className="h-9 w-9"
+            >
+              <Download className="h-4 w-4" />
+            </Button>
             {isFullscreen && (
               <Button
                 variant="outline"
