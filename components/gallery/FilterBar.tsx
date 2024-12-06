@@ -14,6 +14,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { CalendarIcon, FilterIcon, XIcon, Heart } from "lucide-react";
 import { useState, useMemo } from "react";
 import { DateRange } from "react-day-picker";
@@ -48,6 +55,8 @@ export function FilterBar({
     return undefined;
   });
 
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
   const favoritesCount = useMemo(() => 
     isInitialized ? favorites.length : 0
   , [favorites.length, isInitialized]);
@@ -72,19 +81,24 @@ export function FilterBar({
       end_date: undefined,
       location: undefined
     });
+    if (showFavorites) {
+      onToggleFavorites?.();
+    }
+    setIsDrawerOpen(false);
   };
 
-  return (
-    <div className="flex items-center gap-4">
-      <FilterIcon className="w-5 h-5 text-muted-foreground" />
-      
+  const FilterControls = () => (
+    <div className="flex flex-col md:flex-row gap-4">
       <Button
         variant="outline"
         className={cn(
-          "gap-2",
+          "gap-2 w-full md:w-auto",
           showFavorites && "bg-primary/10 hover:bg-primary/20"
         )}
-        onClick={onToggleFavorites}
+        onClick={() => {
+          onToggleFavorites?.();
+          setIsDrawerOpen(false);
+        }}
       >
         <Heart className={cn(
           "h-4 w-4",
@@ -93,10 +107,29 @@ export function FilterBar({
         Favorites ({favoritesCount})
       </Button>
 
+      <Select 
+        value={currentFilters?.location || 'all'} 
+        onValueChange={handleLocationChange}
+      >
+        <SelectTrigger className="w-full md:w-[200px]">
+          <SelectValue placeholder="Select location" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Locations</SelectItem>
+          {locations.map((loc) => (
+            <SelectItem key={loc.primary_location} value={loc.primary_location}>
+              {loc.secondary_location 
+                ? `${loc.primary_location} - ${loc.secondary_location}`
+                : loc.primary_location}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
       <Popover>
         <PopoverTrigger asChild>
           <Button variant="outline" className={cn(
-            "w-[300px] justify-start text-left font-normal",
+            "w-full md:w-auto justify-start text-left font-normal",
             !dateRange && "text-muted-foreground"
           )}>
             <CalendarIcon className="mr-2 h-4 w-4" />
@@ -125,35 +158,58 @@ export function FilterBar({
         </PopoverContent>
       </Popover>
 
-      <Select 
-        value={currentFilters?.location || 'all'} 
-        onValueChange={handleLocationChange}
-      >
-        <SelectTrigger className="w-[180px]">
-          <SelectValue placeholder="Select location" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All Locations</SelectItem>
-          {locations.map((loc) => (
-            <SelectItem key={loc.primary_location} value={loc.primary_location}>
-              {loc.secondary_location 
-                ? `${loc.primary_location} - ${loc.secondary_location}`
-                : loc.primary_location}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
       {(dateRange || currentFilters?.location) && (
         <Button
           variant="ghost"
-          size="icon"
           onClick={clearFilters}
-          className="text-muted-foreground hover:text-foreground"
+          className="text-muted-foreground hover:text-foreground md:ml-auto"
         >
-          <XIcon className="h-4 w-4" />
+          Clear Filters
         </Button>
       )}
+    </div>
+  );
+
+  return (
+    <div className="flex items-center gap-4">
+      {/* Mobile Filter Button and Drawer */}
+      <div className="md:hidden flex items-center gap-2">
+        <Sheet open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
+          <SheetTrigger asChild>
+            <Button variant="ghost" size="icon" className="relative">
+              <FilterIcon className="h-5 w-5" />
+              {(dateRange || currentFilters?.location || showFavorites) && (
+                <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-primary" />
+              )}
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left">
+            <SheetHeader>
+              <SheetTitle>Filters</SheetTitle>
+            </SheetHeader>
+            <div className="mt-4">
+              <FilterControls />
+            </div>
+          </SheetContent>
+        </Sheet>
+        
+        {(dateRange || currentFilters?.location || showFavorites) && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={clearFilters}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <XIcon className="h-4 w-4 mr-2" />
+            Clear
+          </Button>
+        )}
+      </div>
+
+      {/* Desktop Filter Controls */}
+      <div className="hidden md:block">
+        <FilterControls />
+      </div>
     </div>
   );
 }

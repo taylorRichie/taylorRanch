@@ -42,7 +42,7 @@ export default function Home() {
     <main className="min-h-screen">
       <div className="sticky top-0 z-50 bg-background/80 backdrop-blur-sm border-b">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center justify-between gap-4">
             <FilterBar 
               onFilterChange={updateFilters}
               locations={locations}
@@ -50,6 +50,8 @@ export default function Home() {
               showFavorites={showFavorites}
               onToggleFavorites={() => setShowFavorites(!showFavorites)}
             />
+            
+            {/* Sort Controls - Always visible */}
             <SortControls 
               onSortChange={(sort) => updateFilters(sort)}
               currentSort={{
@@ -70,14 +72,16 @@ export default function Home() {
           hasMore={hasMore && !showFavorites}
         />
 
-        <ImageDetail
-          image={selectedImage}
-          onClose={() => setSelectedImage(null)}
-          onPrevious={() => setSelectedImage(filteredImages[currentIndex - 1])}
-          onNext={() => setSelectedImage(filteredImages[currentIndex + 1])}
-          hasPrevious={currentIndex > 0}
-          hasNext={currentIndex < filteredImages.length - 1}
-        />
+        {selectedImage && (
+          <ImageDetail
+            image={selectedImage}
+            onClose={() => setSelectedImage(null)}
+            onPrevious={() => setSelectedImage(filteredImages[currentIndex - 1])}
+            onNext={() => setSelectedImage(filteredImages[currentIndex + 1])}
+            showPrevious={currentIndex > 0}
+            showNext={currentIndex < filteredImages.length - 1}
+          />
+        )}
 
         {error && (
           <div className="text-destructive text-center py-4">
