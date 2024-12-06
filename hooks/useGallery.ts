@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { fetchImages, fetchLocations, ImageFilters, ImageResponse, Location } from '@/lib/api';
 
 interface UseGalleryReturn {
@@ -10,6 +10,8 @@ interface UseGalleryReturn {
   pagination: ImageResponse['pagination'] | null;
   updateFilters: (newFilters: Partial<ImageFilters>) => void;
   resetFilters: () => void;
+  loadMore: () => Promise<void>;
+  hasMore: boolean;
 }
 
 const defaultFilters: ImageFilters = {
@@ -26,6 +28,7 @@ export function useGallery(): UseGalleryReturn {
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<ImageFilters>(defaultFilters);
   const [pagination, setPagination] = useState<ImageResponse['pagination'] | null>(null);
+  const [hasMore, setHasMore] = useState(true);
 
   // Load locations on mount
   useEffect(() => {
@@ -42,15 +45,16 @@ export function useGallery(): UseGalleryReturn {
     loadLocations();
   }, []);
 
-  // Load images when filters change
+  // Load initial images when filters change (except page)
   useEffect(() => {
-    const loadImages = async () => {
+    const loadInitialImages = async () => {
       try {
         setLoading(true);
         setError(null);
-        const response = await fetchImages(filters);
+        const response = await fetchImages({ ...filters, page: 1 });
         setImages(response.images);
         setPagination(response.pagination);
+        setHasMore(response.pagination.page < response.pagination.total_pages);
       } catch (err) {
         setError('Failed to load images');
         console.error('Error loading images:', err);
@@ -59,14 +63,35 @@ export function useGallery(): UseGalleryReturn {
       }
     };
 
-    loadImages();
-  }, [filters]);
+    // Only reset and reload if filters other than page changed
+    const filtersWithoutPage = { ...filters };
+    delete filtersWithoutPage.page;
+    loadInitialImages();
+  }, [JSON.stringify({ ...filters, page: undefined })]);
+
+  const loadMore = useCallback(async () => {
+    if (!pagination || loading || !hasMore) return;
+
+    const nextPage = pagination.page + 1;
+    try {
+      setLoading(true);
+      const response = await fetchImages({ ...filters, page: nextPage });
+      setImages(prev => [...prev, ...response.images]);
+      setPagination(response.pagination);
+      setHasMore(response.pagination.page < response.pagination.total_pages);
+    } catch (err) {
+      setError('Failed to load more images');
+      console.error('Error loading more images:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [pagination, loading, hasMore, filters]);
 
   const updateFilters = (newFilters: Partial<ImageFilters>) => {
     setFilters(prev => ({
       ...prev,
       ...newFilters,
-      // Reset to page 1 when any filter except page changes
+      // Only reset page if filters other than page are changing
       page: 'page' in newFilters ? newFilters.page! : 1
     }));
   };
@@ -83,6 +108,8 @@ export function useGallery(): UseGalleryReturn {
     filters,
     pagination,
     updateFilters,
-    resetFilters
+    resetFilters,
+    loadMore,
+    hasMore
   };
 } 

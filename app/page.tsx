@@ -16,7 +16,9 @@ export default function Home() {
     error,
     filters,
     updateFilters,
-    resetFilters
+    resetFilters,
+    loadMore,
+    hasMore
   } = useGallery();
 
   const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null);
@@ -48,6 +50,8 @@ export default function Home() {
         images={images}
         onImageClick={handleImageClick}
         isLoading={loading}
+        onLoadMore={loadMore}
+        hasMore={hasMore}
       />
 
       <ImageDetail
