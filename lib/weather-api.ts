@@ -52,3 +52,41 @@ export async function fetchWeatherData(params: {
 
   return response.json();
 } 
+
+export interface WeatherMetrics {
+  average: number;
+  max: number;
+  min: number;
+  unit: string;
+}
+
+export interface WindMetrics extends WeatherMetrics {
+  common_direction: string;
+}
+
+export interface ImageData {
+  capture_time: string;
+  cdn_url: string;
+  id: number;
+}
+
+export interface DayRecord {
+  images: ImageData[];
+  temperature: WeatherMetrics;
+  timestamp: string;
+  wind: WindMetrics;
+}
+
+export interface WeatherRecords {
+  coldest_day: DayRecord;
+  hottest_day: DayRecord;
+  windiest_day: DayRecord;
+}
+
+export async function fetchWeatherRecords(): Promise<WeatherRecords> {
+  const response = await fetch('/api/weather/records');
+  if (!response.ok) {
+    throw new Error('Failed to fetch weather records');
+  }
+  return response.json();
+} 

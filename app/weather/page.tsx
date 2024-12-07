@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { Header } from '@/components/layout/Header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
@@ -20,8 +20,11 @@ import {
   ResponsiveContainer,
   TooltipProps
 } from 'recharts';
-import { fetchWeatherData, type WeatherResponse, type WeatherInterval } from '@/lib/weather-api';
+import { fetchWeatherData, type WeatherResponse, type WeatherInterval, type WeatherRecords } from '@/lib/weather-api';
 import { cn } from '@/lib/utils';
+import { WeatherRecordCard } from '@/components/weather/WeatherRecordCard';
+import { Thermometer, Wind } from 'lucide-react';
+import { fetchWeatherRecords } from '@/lib/weather-api';
 
 // Custom tooltip component with dark theme
 const CustomTooltip = ({ active, payload, label }: TooltipProps<any, any>) => {
@@ -52,6 +55,7 @@ export default function WeatherPage() {
   const [interval, setInterval] = useState<WeatherInterval>('hour');
   const [weatherData, setWeatherData] = useState<WeatherResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [weatherRecords, setWeatherRecords] = useState<WeatherRecords | null>(null);
 
   // Fetch data when date range or interval changes
   useEffect(() => {
@@ -76,6 +80,12 @@ export default function WeatherPage() {
         .finally(() => setLoading(false));
     }
   }, [dateRange, interval]);
+
+  useEffect(() => {
+    fetchWeatherRecords()
+      .then(setWeatherRecords)
+      .catch(console.error);
+  }, []);
 
   const formatXAxis = (timestamp: string) => {
     const date = new Date(timestamp);
@@ -267,6 +277,55 @@ export default function WeatherPage() {
                 </CardContent>
               </Card>
             </div>
+          </section>
+
+          <section className="mt-8">
+            <h2 className="text-2xl font-semibold mb-6">Weather Records</h2>
+            {weatherRecords ? (
+              <div className="grid md:grid-cols-3 gap-6">
+                <WeatherRecordCard
+                  title="Hottest Day"
+                  recordValue={`${weatherRecords.hottest_day.temperature.average}°F`}
+                  icon={Thermometer}
+                  iconColor="text-red-500"
+                  record={weatherRecords.hottest_day}
+                  metrics={{
+                    highest: weatherRecords.hottest_day.temperature.max.toString(),
+                    average: weatherRecords.hottest_day.temperature.average.toString(),
+                    lowest: weatherRecords.hottest_day.temperature.min.toString(),
+                    unit: '°F'
+                  }}
+                />
+                <WeatherRecordCard
+                  title="Coldest Day"
+                  recordValue={`${weatherRecords.coldest_day.temperature.average}°F`}
+                  icon={Thermometer}
+                  iconColor="text-blue-500"
+                  record={weatherRecords.coldest_day}
+                  metrics={{
+                    highest: weatherRecords.coldest_day.temperature.max.toString(),
+                    average: weatherRecords.coldest_day.temperature.average.toString(),
+                    lowest: weatherRecords.coldest_day.temperature.min.toString(),
+                    unit: '°F'
+                  }}
+                />
+                <WeatherRecordCard
+                  title="Windiest Day"
+                  recordValue={`${weatherRecords.windiest_day.wind.average}${weatherRecords.windiest_day.wind.unit}`}
+                  icon={Wind}
+                  iconColor="text-green-500"
+                  record={weatherRecords.windiest_day}
+                  metrics={{
+                    highest: weatherRecords.windiest_day.wind.max.toString(),
+                    average: weatherRecords.windiest_day.wind.average.toString(),
+                    lowest: weatherRecords.windiest_day.wind.min.toString(),
+                    unit: weatherRecords.windiest_day.wind.unit
+                  }}
+                />
+              </div>
+            ) : (
+              <div>Loading records...</div>
+            )}
           </section>
         </div>
       </div>
