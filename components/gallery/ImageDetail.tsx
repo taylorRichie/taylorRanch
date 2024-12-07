@@ -241,9 +241,18 @@ export function ImageDetail({
           {/* Mobile portrait footer */}
           <div className="portrait:flex landscape:hidden md:hidden flex-col flex-1">
             <div className="bg-background/80 backdrop-blur-sm h-full pt-3 relative">
-              {/* Weather data */}
-              <div className="flex flex-col px-4 py-2">
-                <div className="flex flex-col gap-3 text-sm text-muted-foreground">
+              <div className="flex flex-row px-4 py-2">
+                <div className="flex-shrink-0 w-[120px]">
+                  <Image
+                    src="https://revealgallery.nyc3.cdn.digitaloceanspaces.com/images/TaylorRanch.png"
+                    alt="Taylor Ranch"
+                    width={120}
+                    height={32}
+                    className="object-contain"
+                    priority
+                  />
+                </div>
+                <div className="flex flex-col gap-3 text-sm text-muted-foreground ml-4">
                   <div className="flex items-center gap-2">
                     <ThermometerIcon className="w-4 h-4" />
                     <span>{image.temperature}°{image.temperature_unit}</span>
@@ -292,13 +301,13 @@ export function ImageDetail({
             "hidden landscape:flex md:flex flex-col w-64 bg-background/80 backdrop-blur-sm border-l",
             isFullscreen && "landscape:hidden"
           )}>
-            <div className="p-4 flex-1">
+            <div className="p-4 landscape:pt-0 flex-1">
               <Image
                 src="https://revealgallery.nyc3.cdn.digitaloceanspaces.com/images/TaylorRanch.png"
                 alt="Taylor Ranch"
                 width={224}
                 height={60}
-                className="w-full object-contain mb-4"
+                className="w-full landscape:w-[70%] object-contain mb-4 mx-auto"
                 priority
               />
               <div className="space-y-2">
