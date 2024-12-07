@@ -1,11 +1,42 @@
-'use client';
-
 import './globals.css';
 import { Inter } from 'next/font/google';
-import { ThemeProvider } from '@/components/theme/ThemeProvider';
-import { FavoritesProvider } from '@/hooks/useFavorites';
+import { Providers } from '@/components/Providers';
+import { Metadata } from 'next';
 
 const inter = Inter({ subsets: ['latin'] });
+
+export const metadata: Metadata = {
+  title: 'Reveal Gallery Weather',
+  description: 'Weather monitoring and historical data visualization',
+  manifest: '/manifest.json',
+  icons: {
+    icon: [
+      { url: 'https://revealgallery.nyc3.digitaloceanspaces.com/images/favicon/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: 'https://revealgallery.nyc3.digitaloceanspaces.com/images/favicon/favicon-32x32.png', sizes: '32x32', type: 'image/png' }
+    ],
+    apple: [
+      { url: 'https://revealgallery.nyc3.digitaloceanspaces.com/images/favicon/apple-touch-icon.png' }
+    ],
+    other: [
+      {
+        rel: 'mask-icon',
+        url: 'https://revealgallery.nyc3.digitaloceanspaces.com/images/favicon/safari-pinned-tab.svg',
+        color: '#000000'
+      }
+    ]
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Reveal Gallery Weather'
+  },
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false
+  }
+};
 
 export default function RootLayout({
   children,
@@ -14,17 +45,22 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <FavoritesProvider>
-            {children}
-          </FavoritesProvider>
-        </ThemeProvider>
+      <head>
+        <link 
+          rel="icon" 
+          type="image/x-icon" 
+          href="https://revealgallery.nyc3.digitaloceanspaces.com/images/favicon/favicon.ico" 
+        />
+        <link 
+          rel="apple-touch-icon" 
+          href="https://revealgallery.nyc3.digitaloceanspaces.com/images/favicon/apple-touch-icon.png" 
+        />
+        <meta name="theme-color" content="#000000" />
+      </head>
+      <body className={`${inter.className} min-h-screen bg-background`}>
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   );
