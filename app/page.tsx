@@ -8,6 +8,7 @@ import { ImageDetail } from '@/components/gallery/ImageDetail';
 import { useGallery } from '@/hooks/useGallery';
 import { GalleryImage, ImageFilters } from '@/lib/api';
 import { useFavorites } from '@/hooks/useFavorites';
+import { Header } from '@/components/layout/Header';
 
 export default function Home() {
   const {
@@ -73,6 +74,7 @@ export default function Home() {
 
   return (
     <main className="min-h-screen">
+      <Header />
       <div className="sticky top-0 z-50 bg-background/80 backdrop-blur-sm border-b">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between gap-4">
