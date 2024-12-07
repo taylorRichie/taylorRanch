@@ -1,6 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  images: { unoptimized: true },
+  images: {
+    domains: [
+      'revealgallery.nyc3.cdn.digitaloceanspaces.com',
+      'revealgallery.nyc3.digitaloceanspaces.com'
+    ],
+  },
+  experimental: {
+    serverActions: true,
+  },
   async rewrites() {
     return [
       {

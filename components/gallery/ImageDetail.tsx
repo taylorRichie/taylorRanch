@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { format } from "date-fns";
-import { ChevronLeft, ChevronRight, X, Download, Maximize, Minimize, ThermometerIcon, Wind, Cloud, Moon } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, Download, Maximize, Minimize, ThermometerIcon, Wind, Cloud, Moon, Heart } from "lucide-react";
 import { useState, useCallback, TouchEvent, useEffect, useRef } from "react";
 import { ImageMetadata } from "./ImageMetadata";
 import { GalleryImage } from "@/lib/api";
@@ -293,6 +293,14 @@ export function ImageDetail({
             isFullscreen && "landscape:hidden"
           )}>
             <div className="p-4 flex-1">
+              <Image
+                src="https://revealgallery.nyc3.cdn.digitaloceanspaces.com/images/TaylorRanch.png"
+                alt="Taylor Ranch"
+                width={224}
+                height={60}
+                className="w-full object-contain mb-4"
+                priority
+              />
               <div className="space-y-2">
                 <p className="text-sm font-medium">
                   {format(new Date(image.capture_time), 'PPpp')}
