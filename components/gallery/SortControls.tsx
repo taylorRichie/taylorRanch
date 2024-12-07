@@ -46,8 +46,8 @@ export function SortControls({ onSortChange, currentSort }: SortControlsProps) {
 
   return (
     <div className="flex items-center gap-2">
-      <Select value={getCurrentSortValue()} onValueChange={handleSortChange}>
-        <SelectTrigger className="w-[180px]">
+      <Select value={getCurrentSortValue()} onValueChange={handleSortChange} name="sort-control">
+        <SelectTrigger className="w-[180px]" id="sort-select">
           <SelectValue placeholder="Sort by" />
         </SelectTrigger>
         <SelectContent>

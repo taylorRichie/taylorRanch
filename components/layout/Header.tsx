@@ -19,21 +19,19 @@ export function Header() {
 
   return (
     <header className="w-full border-b bg-background/80 backdrop-blur-sm [.detail-view_&]:portrait:hidden">
-      <div className="container relative h-[180px]">
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-[240px]">
-            <Image
-              src={logoUrl}
-              alt="Taylor Ranch"
-              width={480}
-              height={128}
-              className="object-contain"
-              priority
-            />
-          </div>
-        </div>
-        <div className="absolute top-4 right-4">
-          <ThemeToggle />
+      <div className="absolute top-6 right-6">
+        <ThemeToggle />
+      </div>
+      <div className="h-[180px] flex items-center justify-center">
+        <div className="w-[240px]">
+          <Image
+            src={logoUrl}
+            alt="Taylor Ranch"
+            width={480}
+            height={128}
+            className="object-contain"
+            priority
+          />
         </div>
       </div>
     </header>

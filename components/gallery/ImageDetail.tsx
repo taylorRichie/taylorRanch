@@ -11,6 +11,27 @@ import { GalleryImage } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import * as FileSaver from 'file-saver';
 import { useTheme } from "next-themes";
+import { useFavorites } from "@/hooks/useFavorites";
+
+interface FloatingHeartProps {
+  x: number;
+  y: number;
+  onComplete: () => void;
+}
+
+function FloatingHeart({ x, y, onComplete }: FloatingHeartProps) {
+  return (
+    <div 
+      className="absolute pointer-events-none z-50 inset-0 flex items-center justify-center"
+      style={{ 
+        animation: 'float-heart 1s ease-out forwards'
+      }}
+      onAnimationEnd={onComplete}
+    >
+      <Heart className="h-4 w-4 text-[#01d3c7] fill-[#01d3c7]" />
+    </div>
+  );
+}
 
 interface ImageDetailProps {
   image: GalleryImage | null;
@@ -30,11 +51,14 @@ export function ImageDetail({
   showNext = false,
 }: ImageDetailProps) {
   const { theme, resolvedTheme } = useTheme();
+  const { favorites, toggleFavorite } = useFavorites();
   const containerRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [leftArrowAnimating, setLeftArrowAnimating] = useState(false);
   const [rightArrowAnimating, setRightArrowAnimating] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [floatingHearts, setFloatingHearts] = useState<{ id: number }[]>([]);
+  const [nextHeartId, setNextHeartId] = useState(0);
 
   useEffect(() => {
     setMounted(true);
@@ -190,6 +214,21 @@ export function ImageDetail({
     };
   }, [image]);
 
+  const handleFavoriteClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (image) {
+      toggleFavorite(image.id);
+      if (!favorites.includes(image.id)) {
+        setFloatingHearts(hearts => [...hearts, { id: nextHeartId }]);
+        setNextHeartId(id => id + 1);
+      }
+    }
+  }, [image, toggleFavorite, favorites, nextHeartId]);
+
+  const removeHeart = useCallback((heartId: number) => {
+    setFloatingHearts(hearts => hearts.filter(heart => heart.id !== heartId));
+  }, []);
+
   if (!image) return null;
 
   return (
@@ -308,6 +347,25 @@ export function ImageDetail({
                 <Button
                   variant="outline"
                   size="icon"
+                  onClick={handleFavoriteClick}
+                  className="h-9 w-9 relative"
+                >
+                  <Heart className={cn(
+                    "h-4 w-4 transition-colors",
+                    image && favorites.includes(image.id) && "fill-[#01d3c7] text-[#01d3c7]"
+                  )} />
+                  {floatingHearts.map(heart => (
+                    <FloatingHeart
+                      key={heart.id}
+                      x={0}
+                      y={0}
+                      onComplete={() => removeHeart(heart.id)}
+                    />
+                  ))}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
                   onClick={handleDownload}
                   className="h-9 w-9"
                 >
@@ -378,6 +436,25 @@ export function ImageDetail({
               <Button
                 variant="ghost"
                 size="icon"
+                onClick={handleFavoriteClick}
+                className="h-8 w-8 relative"
+              >
+                <Heart className={cn(
+                  "h-4 w-4 transition-colors",
+                  image && favorites.includes(image.id) && "fill-[#01d3c7] text-[#01d3c7]"
+                )} />
+                {floatingHearts.map(heart => (
+                  <FloatingHeart
+                    key={heart.id}
+                    x={0}
+                    y={0}
+                    onComplete={() => removeHeart(heart.id)}
+                  />
+                ))}
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={handleDownload}
                 className="h-8 w-8"
               >
@@ -399,7 +476,7 @@ export function ImageDetail({
                 <Button 
                   variant="ghost"
                   size="sm"
-                  className="ml-auto flex items-center gap-2"
+                  className="ml-auto gap-2"
                 >
                   <X className="h-4 w-4" />
                   <span>Close</span>
@@ -408,17 +485,36 @@ export function ImageDetail({
             </div>
           </div>
 
-          {/* Bottom right controls - always visible */}
-          <div className="absolute bottom-4 right-4 z-50 flex items-center gap-2 portrait:hidden">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handleDownload}
-              className="h-9 w-9"
-            >
-              <Download className="h-4 w-4" />
-            </Button>
-            {isFullscreen && (
+          {/* Bottom right controls - only visible in fullscreen mode */}
+          {isFullscreen && (
+            <div className="absolute bottom-4 right-4 z-50 flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleFavoriteClick}
+                className="h-9 w-9 relative"
+              >
+                <Heart className={cn(
+                  "h-4 w-4 transition-colors",
+                  image && favorites.includes(image.id) && "fill-[#01d3c7] text-[#01d3c7]"
+                )} />
+                {floatingHearts.map(heart => (
+                  <FloatingHeart
+                    key={heart.id}
+                    x={0}
+                    y={0}
+                    onComplete={() => removeHeart(heart.id)}
+                  />
+                ))}
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleDownload}
+                className="h-9 w-9"
+              >
+                <Download className="h-4 w-4" />
+              </Button>
               <Button
                 variant="outline"
                 size="icon"
@@ -427,18 +523,18 @@ export function ImageDetail({
               >
                 <Minimize className="h-4 w-4" />
               </Button>
-            )}
-            <DialogClose asChild>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="gap-2"
-              >
-                <X className="h-4 w-4" />
-                <span>Close</span>
-              </Button>
-            </DialogClose>
-          </div>
+              <DialogClose asChild>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="gap-2"
+                >
+                  <X className="h-4 w-4" />
+                  <span>Close</span>
+                </Button>
+              </DialogClose>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

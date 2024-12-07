@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useState, useEffect, useCallback, createContext, useContext, type ReactNode } from 'react';
+import { GalleryImage, ImageFilters } from '@/lib/api';
 
 const STORAGE_KEY = 'taylorRanch_favorites';
 
@@ -25,7 +26,11 @@ const getFavoritesFromStorage = (): number[] => {
   
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    return stored ? JSON.parse(stored) : [];
+    if (!stored) return [];
+    
+    const parsed = JSON.parse(stored);
+    console.log('Loaded favorites from localStorage:', parsed);
+    return Array.isArray(parsed) ? parsed : [];
   } catch (e) {
     console.error('Error loading favorites:', e);
     return [];
@@ -40,18 +45,24 @@ export function FavoritesProvider({ children }: FavoritesProviderProps) {
   const [favorites, setFavorites] = useState<number[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
 
+  // Load favorites from localStorage on mount
   useEffect(() => {
     const storedFavorites = getFavoritesFromStorage();
     setFavorites(storedFavorites);
     setIsInitialized(true);
   }, []);
 
+  // Save favorites to localStorage whenever they change
   useEffect(() => {
     if (!isInitialized) return;
 
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(favorites));
-      console.log('Saved favorites to localStorage:', favorites);
+      const jsonString = JSON.stringify(favorites);
+      localStorage.setItem(STORAGE_KEY, jsonString);
+      console.log('Saving to localStorage:', {
+        key: STORAGE_KEY,
+        value: jsonString
+      });
     } catch (e) {
       console.error('Error saving favorites:', e);
     }
@@ -59,34 +70,42 @@ export function FavoritesProvider({ children }: FavoritesProviderProps) {
 
   const toggleFavorite = useCallback((imageId: number) => {
     setFavorites(prev => {
-      const newFavorites = prev.includes(imageId)
+      const isCurrentlyFavorited = prev.includes(imageId);
+      const newFavorites = isCurrentlyFavorited
         ? prev.filter(id => id !== imageId)
         : [...prev, imageId];
+      
+      console.log('Toggling favorite:', {
+        imageId,
+        wasSelected: isCurrentlyFavorited,
+        newFavorites
+      });
+      
       return newFavorites;
     });
   }, []);
 
-  const isFavorite = useCallback((imageId: number): boolean => {
+  const isFavorite = useCallback((imageId: number) => {
     return favorites.includes(imageId);
   }, [favorites]);
 
+  const value = {
+    favorites,
+    toggleFavorite,
+    isFavorite,
+    isInitialized
+  };
+
   return (
-    <FavoritesContext.Provider 
-      value={{
-        favorites,
-        toggleFavorite,
-        isFavorite,
-        isInitialized
-      }}
-    >
+    <FavoritesContext.Provider value={value}>
       {children}
     </FavoritesContext.Provider>
   );
 }
 
-export function useFavorites(): FavoritesContextType {
+export function useFavorites() {
   const context = useContext(FavoritesContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useFavorites must be used within a FavoritesProvider');
   }
   return context;

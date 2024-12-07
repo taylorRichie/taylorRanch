@@ -21,13 +21,14 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { CalendarIcon, FilterIcon, XIcon, Heart } from "lucide-react";
+import { CalendarIcon, FilterIcon, XCircleIcon, Heart } from "lucide-react";
 import { useState, useMemo } from "react";
 import { DateRange } from "react-day-picker";
 import { addDays } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Location, ImageFilters } from "@/lib/api";
 import { useFavorites } from "@/hooks/useFavorites";
+import { format } from "date-fns";
 
 interface FilterBarProps {
   onFilterChange: (filters: Partial<ImageFilters>) => void;
@@ -35,6 +36,7 @@ interface FilterBarProps {
   currentFilters?: Partial<ImageFilters>;
   showFavorites?: boolean;
   onToggleFavorites?: () => void;
+  totalCount?: number;
 }
 
 export function FilterBar({ 
@@ -42,7 +44,8 @@ export function FilterBar({
   locations, 
   currentFilters = {},
   showFavorites = false,
-  onToggleFavorites
+  onToggleFavorites,
+  totalCount
 }: FilterBarProps) {
   const { favorites, isInitialized } = useFavorites();
   const [dateRange, setDateRange] = useState<DateRange | undefined>(() => {
@@ -64,8 +67,10 @@ export function FilterBar({
   const handleDateRangeChange = (range: DateRange | undefined) => {
     setDateRange(range);
     onFilterChange({ 
-      start_date: range?.from?.toISOString(),
-      end_date: range?.to?.toISOString() || (range?.from ? addDays(range.from, 1).toISOString() : undefined)
+      start_date: range?.from ? format(range.from, 'yyyy-MM-dd\'T\'00:00:00') : undefined,
+      end_date: range?.to 
+        ? format(range.to, 'yyyy-MM-dd\'T\'23:59:59')
+        : (range?.from ? format(range.from, 'yyyy-MM-dd\'T\'23:59:59') : undefined)
     });
   };
 
@@ -79,7 +84,9 @@ export function FilterBar({
     onFilterChange({
       start_date: undefined,
       end_date: undefined,
-      location: undefined
+      location: undefined,
+      sort_by: currentFilters?.sort_by,
+      sort_order: currentFilters?.sort_order
     });
     if (showFavorites) {
       onToggleFavorites?.();
@@ -93,7 +100,7 @@ export function FilterBar({
         variant="outline"
         className={cn(
           "gap-2 w-full md:w-auto",
-          showFavorites && "bg-primary/10 hover:bg-primary/20"
+          showFavorites && "bg-[#01d3c7]/10 hover:bg-[#01d3c7]/20"
         )}
         onClick={() => {
           onToggleFavorites?.();
@@ -102,29 +109,10 @@ export function FilterBar({
       >
         <Heart className={cn(
           "h-4 w-4",
-          showFavorites && "fill-current"
+          showFavorites && "fill-[#01d3c7] text-[#01d3c7]"
         )} />
         Favorites ({favoritesCount})
       </Button>
-
-      <Select 
-        value={currentFilters?.location || 'all'} 
-        onValueChange={handleLocationChange}
-      >
-        <SelectTrigger className="w-full md:w-[200px]">
-          <SelectValue placeholder="Select location" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem key="all" value="all">All Locations</SelectItem>
-          {locations.map((loc) => (
-            <SelectItem key={loc.primary_location} value={loc.primary_location}>
-              {loc.secondary_location 
-                ? `${loc.primary_location} - ${loc.secondary_location}`
-                : loc.primary_location}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
 
       <Popover>
         <PopoverTrigger asChild>
@@ -154,18 +142,27 @@ export function FilterBar({
             selected={dateRange}
             onSelect={handleDateRangeChange}
             numberOfMonths={2}
+            id="date-range-calendar"
           />
         </PopoverContent>
       </Popover>
 
-      {(dateRange || currentFilters?.location) && (
-        <Button
-          variant="ghost"
-          onClick={clearFilters}
-          className="text-muted-foreground hover:text-foreground md:ml-auto"
-        >
-          Clear Filters
-        </Button>
+      {dateRange && (
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            onClick={clearFilters}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <XCircleIcon className="h-4 w-4 mr-2" />
+            Clear Filters
+          </Button>
+          {totalCount !== undefined && (
+            <span className="text-sm text-muted-foreground">
+              {totalCount.toLocaleString()} {totalCount === 1 ? 'image' : 'images'}
+            </span>
+          )}
+        </div>
       )}
     </div>
   );
@@ -178,7 +175,7 @@ export function FilterBar({
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon" className="relative">
               <FilterIcon className="h-5 w-5" />
-              {(dateRange || currentFilters?.location || showFavorites) && (
+              {(dateRange || showFavorites) && (
                 <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-primary" />
               )}
             </Button>
@@ -193,14 +190,14 @@ export function FilterBar({
           </SheetContent>
         </Sheet>
         
-        {(dateRange || currentFilters?.location || showFavorites) && (
+        {(dateRange || showFavorites) && (
           <Button
             variant="ghost"
             size="sm"
             onClick={clearFilters}
             className="text-muted-foreground hover:text-foreground"
           >
-            <XIcon className="h-4 w-4 mr-2" />
+            <XCircleIcon className="h-4 w-4 mr-2" />
             Clear
           </Button>
         )}

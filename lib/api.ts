@@ -32,6 +32,7 @@ export interface ImageFilters {
   end_date?: string;
   sort_by?: 'capture_time' | 'temperature' | 'created_at';
   sort_order?: 'asc' | 'desc';
+  ids?: string;
 }
 
 export interface Location {

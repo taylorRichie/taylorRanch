@@ -28,7 +28,15 @@ export function useGallery(): UseGalleryReturn {
   const [locations, setLocations] = useState<Location[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [filters, setFilters] = useState<ImageFilters>(defaultFilters);
+  const [filters, setFilters] = useState<ImageFilters>(() => {
+    // Initialize with default filters
+    return {
+      page: 1,
+      per_page: 20,
+      sort_by: 'capture_time',
+      sort_order: 'desc'
+    };
+  });
   const [pagination, setPagination] = useState<ImageResponse['pagination'] | null>(null);
   const [hasMore, setHasMore] = useState(true);
 
@@ -70,7 +78,13 @@ export function useGallery(): UseGalleryReturn {
     };
 
     loadInitialImages();
-  }, [JSON.stringify({ ...filters, page: undefined })]);
+  }, [
+    filters.sort_by,
+    filters.sort_order,
+    filters.location,
+    filters.start_date,
+    filters.end_date
+  ]);
 
   const loadMore = useCallback(async () => {
     if (!pagination || loading || !hasMore) {
@@ -97,16 +111,33 @@ export function useGallery(): UseGalleryReturn {
 
   const updateFilters = useCallback((newFilters: Partial<ImageFilters>) => {
     console.log('Updating filters:', newFilters);
-    setFilters(prev => ({
-      ...prev,
-      ...newFilters,
-      page: 'page' in newFilters ? newFilters.page! : 1
-    }));
+    setFilters(prev => {
+      // Create a new filter object with the updates
+      const updatedFilters = {
+        ...prev,
+        ...newFilters,
+        // Reset page to 1 when filters change
+        page: 1
+      };
+      
+      // If sort settings are not being explicitly changed, preserve them
+      if (!newFilters.sort_by && !newFilters.sort_order) {
+        updatedFilters.sort_by = prev.sort_by;
+        updatedFilters.sort_order = prev.sort_order;
+      }
+      
+      return updatedFilters;
+    });
   }, []);
 
   const resetFilters = useCallback(() => {
     console.log('Resetting filters to default');
-    setFilters(defaultFilters);
+    setFilters({
+      page: 1,
+      per_page: 20,
+      sort_by: 'capture_time',
+      sort_order: 'desc'
+    });
   }, []);
 
   return {

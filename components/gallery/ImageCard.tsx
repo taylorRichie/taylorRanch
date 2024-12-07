@@ -8,6 +8,7 @@ import { Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { GalleryImage } from "@/lib/api";
 import { useFavorites } from "@/hooks/useFavorites";
+import { format } from "date-fns";
 
 interface FloatingHeartProps {
   x: number;
@@ -39,21 +40,33 @@ export function ImageCard({ image, onClick }: ImageCardProps) {
   const isFavorite = favorites.includes(image.id);
   const [floatingHearts, setFloatingHearts] = useState<{ id: number }[]>([]);
   const [nextHeartId, setNextHeartId] = useState(0);
+  const [isRemoving, setIsRemoving] = useState(false);
 
-  const handleFavoriteClick = useCallback((e: React.MouseEvent) => {
+  const handleFavoriteClick = useCallback(async (e: React.MouseEvent) => {
     e.stopPropagation();
+    
+    // If we're unfavoriting and in the favorites view
+    if (isFavorite && window.location.hash === '#favorites') {
+      setIsRemoving(true);
+      // Wait for animation to complete before actually removing
+      await new Promise(resolve => setTimeout(resolve, 200));
+    } else {
+      setFloatingHearts(hearts => [...hearts, { id: nextHeartId }]);
+      setNextHeartId(id => id + 1);
+    }
+    
     toggleFavorite(image.id);
-
-    setFloatingHearts(hearts => [...hearts, { id: nextHeartId }]);
-    setNextHeartId(id => id + 1);
-  }, [image.id, toggleFavorite, nextHeartId]);
+  }, [image.id, toggleFavorite, nextHeartId, isFavorite]);
 
   const removeHeart = useCallback((heartId: number) => {
     setFloatingHearts(hearts => hearts.filter(heart => heart.id !== heartId));
   }, []);
 
   return (
-    <Card className="group relative overflow-hidden">
+    <Card className={cn(
+      "group relative overflow-hidden transition-all duration-200",
+      isRemoving && "animate-fade-out"
+    )}>
       <CardContent className="p-0 cursor-pointer" onClick={onClick}>
         <div className="relative aspect-[4/3]">
           <Image
@@ -69,12 +82,12 @@ export function ImageCard({ image, onClick }: ImageCardProps) {
       <CardFooter className="p-4 flex justify-between items-center">
         <div className="text-sm">
           <p className="font-medium truncate">
+            {format(new Date(image.capture_time), 'MMM d, yyyy, h:mm:ss aa')}
+          </p>
+          <p className="text-muted-foreground truncate">
             {image.secondary_location 
               ? `${image.primary_location} - ${image.secondary_location}`
               : image.primary_location}
-          </p>
-          <p className="text-muted-foreground">
-            {new Date(image.capture_time).toLocaleDateString()}
           </p>
         </div>
         <div className="relative">
