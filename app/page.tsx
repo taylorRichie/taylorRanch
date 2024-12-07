@@ -117,6 +117,8 @@ export default function Home() {
           onPrevious={currentIndex > 0
             ? () => setSelectedImage(filteredImages[currentIndex - 1])
             : undefined}
+          showNext={currentIndex < filteredImages.length - 1}
+          showPrevious={currentIndex > 0}
         />
       )}
     </main>
