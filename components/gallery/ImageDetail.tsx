@@ -28,10 +28,58 @@ export function ImageDetail({
   showPrevious = false,
   showNext = false,
 }: ImageDetailProps) {
-  const [isAnimating, setIsAnimating] = useState(false);
-  const [slideDirection, setSlideDirection] = useState<'left' | 'right' | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [leftArrowAnimating, setLeftArrowAnimating] = useState(false);
+  const [rightArrowAnimating, setRightArrowAnimating] = useState(false);
+
+  const handlePrevious = useCallback(() => {
+    if (onPrevious) {
+      setLeftArrowAnimating(true);
+      setTimeout(() => setLeftArrowAnimating(false), 200);
+      onPrevious();
+    }
+  }, [onPrevious]);
+
+  const handleNext = useCallback(() => {
+    if (onNext) {
+      setRightArrowAnimating(true);
+      setTimeout(() => setRightArrowAnimating(false), 200);
+      onNext();
+    }
+  }, [onNext]);
+
+  // Touch handling for swipe navigation
+  const [touchStart, setTouchStart] = useState(0);
+  const [swipeDistance, setSwipeDistance] = useState(0);
+
+  const handleTouchStart = (e: TouchEvent) => {
+    setTouchStart(e.touches[0].clientX);
+  };
+
+  const handleTouchMove = (e: TouchEvent) => {
+    if (touchStart) {
+      const currentTouch = e.touches[0].clientX;
+      const distance = currentTouch - touchStart;
+      setSwipeDistance(distance);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (swipeDistance > 50 && showPrevious) {
+      handlePrevious();
+    } else if (swipeDistance < -50 && showNext) {
+      handleNext();
+    }
+    setTouchStart(0);
+    setSwipeDistance(0);
+  };
+
+  const swipeHandlers = {
+    onTouchStart: handleTouchStart,
+    onTouchMove: handleTouchMove,
+    onTouchEnd: handleTouchEnd,
+  };
 
   const base64ToFile = (base64Data: string, filename: string, contentType: string) => {
     const sliceSize = 1024;
@@ -82,30 +130,6 @@ export function ImageDetail({
     }
   }, [image]);
 
-  const handlePrevious = useCallback(() => {
-    if (onPrevious && !isAnimating) {
-      setSlideDirection('right');
-      setIsAnimating(true);
-      setTimeout(() => {
-        onPrevious();
-        setIsAnimating(false);
-        setSlideDirection(null);
-      }, 200);
-    }
-  }, [onPrevious, isAnimating]);
-
-  const handleNext = useCallback(() => {
-    if (onNext && !isAnimating) {
-      setSlideDirection('left');
-      setIsAnimating(true);
-      setTimeout(() => {
-        onNext();
-        setIsAnimating(false);
-        setSlideDirection(null);
-      }, 200);
-    }
-  }, [onNext, isAnimating]);
-
   const toggleFullscreen = useCallback(() => {
     if (!document.fullscreenElement) {
       containerRef.current?.requestFullscreen();
@@ -123,44 +147,16 @@ export function ImageDetail({
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
-  // Touch handling for swipe navigation
-  const [touchStart, setTouchStart] = useState(0);
-  const [swipeDistance, setSwipeDistance] = useState(0);
-
-  const handleTouchStart = (e: TouchEvent) => {
-    setTouchStart(e.touches[0].clientX);
-  };
-
-  const handleTouchMove = (e: TouchEvent) => {
-    if (touchStart) {
-      const currentTouch = e.touches[0].clientX;
-      const distance = currentTouch - touchStart;
-      setSwipeDistance(distance);
-    }
-  };
-
-  const handleTouchEnd = () => {
-    if (swipeDistance > 50 && showPrevious) {
-      handlePrevious();
-    } else if (swipeDistance < -50 && showNext) {
-      handleNext();
-    }
-    setTouchStart(0);
-    setSwipeDistance(0);
-  };
-
-  const swipeHandlers = {
-    onTouchStart: handleTouchStart,
-    onTouchMove: handleTouchMove,
-    onTouchEnd: handleTouchEnd,
-  };
-
-  // Add keyboard navigation
+  // Add keyboard navigation with animations
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft' && showPrevious && !isAnimating) {
+      if (e.key === 'ArrowLeft' && showPrevious) {
+        setLeftArrowAnimating(true);
+        setTimeout(() => setLeftArrowAnimating(false), 200);
         handlePrevious();
-      } else if (e.key === 'ArrowRight' && showNext && !isAnimating) {
+      } else if (e.key === 'ArrowRight' && showNext) {
+        setRightArrowAnimating(true);
+        setTimeout(() => setRightArrowAnimating(false), 200);
         handleNext();
       } else if (e.key === 'Escape') {
         onClose();
@@ -169,7 +165,7 @@ export function ImageDetail({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handlePrevious, handleNext, showPrevious, showNext, isAnimating, onClose]);
+  }, [handlePrevious, handleNext, showPrevious, showNext, onClose]);
 
   if (!image) return null;
 
@@ -193,44 +189,43 @@ export function ImageDetail({
               </div>
             </div>
 
-            {/* Navigation arrows - always visible over image */}
+            {/* Navigation arrows */}
             <div className="absolute inset-y-0 left-4 right-4 z-10 flex items-center justify-between pointer-events-none">
               <Button
                 variant="ghost"
                 size="icon"
                 className={cn(
                   "h-12 w-12 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background/90 pointer-events-auto transition-transform duration-200",
-                  isAnimating && "opacity-0",
-                  showPrevious ? "translate-x-0 opacity-100" : "-translate-x-4 opacity-0"
+                  showPrevious ? "translate-x-0 opacity-100" : "-translate-x-4 opacity-0",
                 )}
                 onClick={handlePrevious}
-                disabled={!showPrevious || isAnimating}
+                disabled={!showPrevious}
               >
-                <ChevronLeft className="h-6 w-6" />
+                <ChevronLeft className={cn(
+                  "h-6 w-6 transition-transform duration-200",
+                  leftArrowAnimating && "-translate-x-2"
+                )} />
               </Button>
               <Button
                 variant="ghost"
                 size="icon"
                 className={cn(
                   "h-12 w-12 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background/90 pointer-events-auto transition-transform duration-200",
-                  isAnimating && "opacity-0",
-                  showNext ? "translate-x-0 opacity-100" : "translate-x-4 opacity-0"
+                  showNext ? "translate-x-0 opacity-100" : "translate-x-4 opacity-0",
                 )}
                 onClick={handleNext}
-                disabled={!showNext || isAnimating}
+                disabled={!showNext}
               >
-                <ChevronRight className="h-6 w-6" />
+                <ChevronRight className={cn(
+                  "h-6 w-6 transition-transform duration-200",
+                  rightArrowAnimating && "translate-x-2"
+                )} />
               </Button>
             </div>
 
             {/* Image */}
             <div 
-              className={cn(
-                "relative w-full h-full portrait:mt-[76px] portrait:mb-0 landscape:mt-0 md:mt-0",
-                isAnimating && "transition-transform duration-200",
-                slideDirection === "left" && "translate-x-[-100vw]",
-                slideDirection === "right" && "translate-x-[100vw]"
-              )}
+              className="relative w-full h-full portrait:mt-[76px] portrait:mb-0 landscape:mt-0 md:mt-0"
               {...swipeHandlers}
             >
               <Image
