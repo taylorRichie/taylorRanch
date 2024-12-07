@@ -3,7 +3,7 @@ import Image from "next/image";
 
 export function Header() {
   return (
-    <header className="w-full border-b bg-background/80 backdrop-blur-sm">
+    <header className="w-full border-b bg-background/80 backdrop-blur-sm [.detail-view_&]:portrait:hidden">
       <div className="container relative h-[180px]">
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="w-[240px]">

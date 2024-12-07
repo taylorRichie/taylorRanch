@@ -167,6 +167,18 @@ export function ImageDetail({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handlePrevious, handleNext, showPrevious, showNext, onClose]);
 
+  // Add detail-view class to html element when dialog is open
+  useEffect(() => {
+    if (image) {
+      document.documentElement.classList.add('detail-view');
+    } else {
+      document.documentElement.classList.remove('detail-view');
+    }
+    return () => {
+      document.documentElement.classList.remove('detail-view');
+    };
+  }, [image]);
+
   if (!image) return null;
 
   return (
@@ -176,7 +188,7 @@ export function ImageDetail({
           {/* Main content area */}
           <div className="relative flex-1 flex items-center justify-center">
             {/* Mobile portrait header */}
-            <div className="absolute top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-sm p-4 md:hidden landscape:hidden portrait:block">
+            <div className="absolute top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-sm p-4 md:hidden landscape:hidden portrait:block [.detail-view_&]:hidden">
               <div className="relative">
                 <div className="w-[240px]">
                   <Image
