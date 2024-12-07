@@ -59,8 +59,8 @@ export function useGallery(): UseGalleryReturn {
         const response = await fetchImages({ ...filters, page: 1 });
         console.log('Loaded initial images:', response);
         setImages(response.images);
-        setPagination(response.pagination);
-        setHasMore(response.pagination.page < response.pagination.total_pages);
+        setPagination(response.pagination || { page: 1, total_pages: 1, total: response.images.length, per_page: 20 });
+        setHasMore(response.pagination?.page < response.pagination?.total_pages || false);
       } catch (err) {
         console.error('Error loading initial images:', err);
         setError('Failed to load images');
@@ -85,8 +85,8 @@ export function useGallery(): UseGalleryReturn {
       const response = await fetchImages({ ...filters, page: nextPage });
       console.log('Loaded more images:', response);
       setImages(prev => [...prev, ...response.images]);
-      setPagination(response.pagination);
-      setHasMore(response.pagination.page < response.pagination.total_pages);
+      setPagination(response.pagination || pagination);
+      setHasMore(response.pagination?.page < response.pagination?.total_pages || false);
     } catch (err) {
       console.error('Error loading more images:', err);
       setError('Failed to load more images');

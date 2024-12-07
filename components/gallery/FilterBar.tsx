@@ -115,7 +115,7 @@ export function FilterBar({
           <SelectValue placeholder="Select location" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">All Locations</SelectItem>
+          <SelectItem key="all" value="all">All Locations</SelectItem>
           {locations.map((loc) => (
             <SelectItem key={loc.primary_location} value={loc.primary_location}>
               {loc.secondary_location 

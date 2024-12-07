@@ -1,6 +1,6 @@
 'use client';
 
-import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogClose, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { format } from "date-fns";
@@ -10,6 +10,7 @@ import { ImageMetadata } from "./ImageMetadata";
 import { GalleryImage } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import * as FileSaver from 'file-saver';
+import { useTheme } from "next-themes";
 
 interface ImageDetailProps {
   image: GalleryImage | null;
@@ -28,10 +29,20 @@ export function ImageDetail({
   showPrevious = false,
   showNext = false,
 }: ImageDetailProps) {
+  const { theme, resolvedTheme } = useTheme();
   const containerRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [leftArrowAnimating, setLeftArrowAnimating] = useState(false);
   const [rightArrowAnimating, setRightArrowAnimating] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const logoUrl = mounted && (theme === "light" || resolvedTheme === "light")
+    ? "https://revealgallery.nyc3.cdn.digitaloceanspaces.com/images/TaylorRanch_light.png"
+    : "https://revealgallery.nyc3.cdn.digitaloceanspaces.com/images/TaylorRanch.png";
 
   const handlePrevious = useCallback(() => {
     if (onPrevious) {
@@ -184,124 +195,116 @@ export function ImageDetail({
   return (
     <Dialog open={!!image} onOpenChange={() => onClose()}>
       <DialogContent className="max-w-[100vw] w-full h-screen p-0 portrait:h-screen portrait:max-h-screen" hideCloseButton>
+        <DialogTitle className="sr-only">Image Details</DialogTitle>
         <div ref={containerRef} className="relative h-full flex flex-col landscape:flex-row">
           {/* Main content area */}
-          <div className="relative flex-1 flex items-center justify-center">
+          <div className="relative flex-1 flex flex-col portrait:min-h-0">
             {/* Mobile portrait header */}
-            <div className="absolute top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-sm p-4 md:hidden landscape:hidden portrait:block [.detail-view_&]:hidden">
-              <div className="relative">
-                <div className="w-[240px]">
+            <div className="portrait:h-[128px] bg-background/80 backdrop-blur-sm md:hidden landscape:hidden portrait:block">
+              <div className="h-full flex items-center justify-center">
+                <div className="w-[180px]">
                   <Image
-                    src="https://revealgallery.nyc3.cdn.digitaloceanspaces.com/images/TaylorRanch.png"
+                    src={logoUrl}
                     alt="Taylor Ranch"
-                    width={480}
-                    height={128}
+                    width={360}
+                    height={96}
                     className="object-contain"
                     priority
                   />
                 </div>
-                <div className="absolute top-0 right-0">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={toggleFullscreen}
-                  >
-                    {isFullscreen ? (
-                      <Minimize className="h-4 w-4" />
-                    ) : (
-                      <Maximize className="h-4 w-4" />
-                    )}
-                  </Button>
+              </div>
+            </div>
+
+            {/* Image container */}
+            <div className="relative portrait:h-auto min-h-0 portrait:flex portrait:flex-col portrait:items-center landscape:flex-1 landscape:flex landscape:items-center landscape:justify-center">
+              {/* Navigation arrows */}
+              <div className="absolute inset-y-0 left-4 right-4 z-30 flex items-center justify-between pointer-events-none">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={cn(
+                    "h-12 w-12 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background/90 pointer-events-auto transition-transform duration-200",
+                    showPrevious ? "translate-x-0 opacity-100" : "-translate-x-4 opacity-0",
+                  )}
+                  onClick={handlePrevious}
+                  disabled={!showPrevious}
+                >
+                  <ChevronLeft className={cn(
+                    "h-6 w-6 transition-transform duration-200",
+                    leftArrowAnimating && "-translate-x-2"
+                  )} />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={cn(
+                    "h-12 w-12 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background/90 pointer-events-auto transition-transform duration-200",
+                    showNext ? "translate-x-0 opacity-100" : "translate-x-4 opacity-0",
+                  )}
+                  onClick={handleNext}
+                  disabled={!showNext}
+                >
+                  <ChevronRight className={cn(
+                    "h-6 w-6 transition-transform duration-200",
+                    rightArrowAnimating && "translate-x-2"
+                  )} />
+                </Button>
+              </div>
+
+              {/* Image */}
+              <div 
+                className="relative portrait:w-full portrait:aspect-[4/3] landscape:w-full landscape:h-full"
+                {...swipeHandlers}
+              >
+                <Image
+                  src={image.cdn_url}
+                  alt={`${image.primary_location} - ${image.secondary_location}`}
+                  fill
+                  className="object-contain"
+                  priority
+                />
+              </div>
+            </div>
+
+            {/* Mobile portrait footer */}
+            <div className="portrait:block landscape:hidden md:hidden">
+              <div className="bg-background/80 backdrop-blur-sm p-4">
+                <div className="flex flex-row gap-6">
+                  <div className="flex flex-col gap-2">
+                    <p className="text-sm font-medium">
+                      {format(new Date(image.capture_time), 'PPpp')}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {image.secondary_location 
+                        ? `${image.primary_location} - ${image.secondary_location}`
+                        : image.primary_location}
+                    </p>
+                  </div>
+                  <div className="flex flex-col gap-3 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-2">
+                      <ThermometerIcon className="w-4 h-4" />
+                      <span>{image.temperature}°{image.temperature_unit}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Wind className="w-4 h-4" />
+                      <span>{image.wind_speed} {image.wind_unit} {image.wind_direction}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Cloud className="w-4 h-4" />
+                      <span>{image.raw_metadata.sun_status}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Moon className="w-4 h-4" />
+                      <span>{image.raw_metadata.moon_phase}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Navigation arrows */}
-            <div className="absolute inset-y-0 left-4 right-4 z-10 flex items-center justify-between pointer-events-none">
-              <Button
-                variant="ghost"
-                size="icon"
-                className={cn(
-                  "h-12 w-12 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background/90 pointer-events-auto transition-transform duration-200",
-                  showPrevious ? "translate-x-0 opacity-100" : "-translate-x-4 opacity-0",
-                )}
-                onClick={handlePrevious}
-                disabled={!showPrevious}
-              >
-                <ChevronLeft className={cn(
-                  "h-6 w-6 transition-transform duration-200",
-                  leftArrowAnimating && "-translate-x-2"
-                )} />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className={cn(
-                  "h-12 w-12 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background/90 pointer-events-auto transition-transform duration-200",
-                  showNext ? "translate-x-0 opacity-100" : "translate-x-4 opacity-0",
-                )}
-                onClick={handleNext}
-                disabled={!showNext}
-              >
-                <ChevronRight className={cn(
-                  "h-6 w-6 transition-transform duration-200",
-                  rightArrowAnimating && "translate-x-2"
-                )} />
-              </Button>
-            </div>
-
-            {/* Image */}
-            <div 
-              className="relative w-full h-full portrait:mt-[76px] portrait:mb-0 landscape:mt-0 md:mt-0"
-              {...swipeHandlers}
-            >
-              <Image
-                src={image.cdn_url}
-                alt={`${image.primary_location} - ${image.secondary_location}`}
-                fill
-                className="object-contain"
-                priority
-              />
-            </div>
-          </div>
-
-          {/* Mobile portrait footer */}
-          <div className="portrait:flex landscape:hidden md:hidden flex-col flex-1">
-            <div className="bg-background/80 backdrop-blur-sm h-full pt-3 relative">
-              <div className="flex flex-row px-4 py-2">
-                <div className="flex-shrink-0 w-[120px]">
-                  <Image
-                    src="https://revealgallery.nyc3.cdn.digitaloceanspaces.com/images/TaylorRanch.png"
-                    alt="Taylor Ranch"
-                    width={120}
-                    height={32}
-                    className="object-contain"
-                    priority
-                  />
-                </div>
-                <div className="flex flex-col gap-3 text-sm text-muted-foreground ml-4">
-                  <div className="flex items-center gap-2">
-                    <ThermometerIcon className="w-4 h-4" />
-                    <span>{image.temperature}°{image.temperature_unit}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Wind className="w-4 h-4" />
-                    <span>{image.wind_speed} {image.wind_unit} {image.wind_direction}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Cloud className="w-4 h-4" />
-                    <span>{image.raw_metadata.sun_status}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Moon className="w-4 h-4" />
-                    <span>{image.raw_metadata.moon_phase}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Controls */}
-              <div className="absolute right-4 bottom-12 z-50 flex items-center gap-2">
+            {/* Controls - moved outside footer for fixed positioning */}
+            <div className="portrait:block landscape:hidden md:hidden">
+              <div className="fixed right-2 bottom-[48px] z-50 flex items-center gap-2">
                 <Button
                   variant="outline"
                   size="icon"
@@ -324,14 +327,14 @@ export function ImageDetail({
             </div>
           </div>
 
-          {/* Sidebar - desktop and landscape */}
+          {/* Desktop/Landscape sidebar */}
           <div className={cn(
             "hidden landscape:flex md:flex flex-col w-64 bg-background/80 backdrop-blur-sm border-l",
             isFullscreen && "landscape:hidden"
           )}>
             <div className="p-4 landscape:pt-0 flex-1">
               <Image
-                src="https://revealgallery.nyc3.cdn.digitaloceanspaces.com/images/TaylorRanch.png"
+                src={logoUrl}
                 alt="Taylor Ranch"
                 width={224}
                 height={60}

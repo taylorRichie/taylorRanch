@@ -24,37 +24,40 @@ export function ImageCard({ image, isLoaded, onLoad, onClick }: ImageCardProps) 
     ? `${image.primary_location} - ${image.secondary_location}`
     : image.primary_location;
 
-  const handleFavoriteClick = (e: React.MouseEvent) => {
+  const handleFavoriteClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     if (!isInitialized) return;
-    e.stopPropagation(); // Prevent card click when clicking heart
+    e.preventDefault();
+    e.stopPropagation();
     toggleFavorite(image.id);
   };
 
   const isImageFavorite = isFavorite(image.id);
 
   return (
-    <Card 
-      className="overflow-hidden cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
-      onClick={onClick}
-    >
-      <CardContent className="p-0 relative aspect-[4/3]">
-        {!isLoaded && (
-          <div className="absolute inset-0 bg-muted animate-pulse" />
-        )}
-        <NextImage
-          src={image.cdn_url}
-          alt={`Trail camera image from ${locationDisplay} on ${formattedDate}`}
-          width={800}
-          height={600}
-          className={cn(
-            "object-cover w-full h-full transition-opacity duration-300",
-            isLoaded ? "opacity-100" : "opacity-0"
+    <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+      <div 
+        className="cursor-pointer"
+        onClick={onClick}
+      >
+        <CardContent className="p-0 relative aspect-[4/3]">
+          {!isLoaded && (
+            <div className="absolute inset-0 bg-muted animate-pulse" />
           )}
-          onLoad={onLoad}
-          priority={image.id <= 4}
-          unoptimized
-        />
-      </CardContent>
+          <NextImage
+            src={image.cdn_url}
+            alt={`Trail camera image from ${locationDisplay} on ${formattedDate}`}
+            width={800}
+            height={600}
+            className={cn(
+              "object-cover w-full h-full transition-opacity duration-300",
+              isLoaded ? "opacity-100" : "opacity-0"
+            )}
+            onLoad={onLoad}
+            priority={image.id <= 4}
+            unoptimized
+          />
+        </CardContent>
+      </div>
       <CardFooter className="flex justify-between items-center p-4">
         <div className="flex flex-col items-start gap-1">
           <p className="text-sm font-medium">{formattedDate}</p>
@@ -78,4 +81,4 @@ export function ImageCard({ image, isLoaded, onLoad, onClick }: ImageCardProps) 
       </CardFooter>
     </Card>
   );
-}
+} 
