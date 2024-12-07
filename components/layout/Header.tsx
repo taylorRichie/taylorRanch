@@ -1,15 +1,25 @@
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
-import { CameraIcon } from "lucide-react";
+import Image from "next/image";
 
 export function Header() {
   return (
-    <header className="border-b">
-      <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <CameraIcon className="h-6 w-6" />
-          <h1 className="text-2xl font-semibold tracking-tight">Taylor Ranch est 2017</h1>
+    <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-sm">
+      <div className="container relative h-[180px]">
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-[240px]">
+            <Image
+              src="https://revealgallery.nyc3.cdn.digitaloceanspaces.com/images/TaylorRanch.png"
+              alt="Taylor Ranch"
+              width={480}
+              height={128}
+              className="object-contain"
+              priority
+            />
+          </div>
         </div>
-        <ThemeToggle />
+        <div className="absolute top-4 right-4">
+          <ThemeToggle />
+        </div>
       </div>
     </header>
   );

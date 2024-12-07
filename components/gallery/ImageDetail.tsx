@@ -177,15 +177,31 @@ export function ImageDetail({
           <div className="relative flex-1 flex items-center justify-center">
             {/* Mobile portrait header */}
             <div className="absolute top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-sm p-4 md:hidden landscape:hidden portrait:block">
-              <div className="space-y-2">
-                <p className="text-sm font-medium">
-                  {format(new Date(image.capture_time), 'PPpp')}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {image.secondary_location 
-                    ? `${image.primary_location} - ${image.secondary_location}`
-                    : image.primary_location}
-                </p>
+              <div className="relative">
+                <div className="w-[240px]">
+                  <Image
+                    src="https://revealgallery.nyc3.cdn.digitaloceanspaces.com/images/TaylorRanch.png"
+                    alt="Taylor Ranch"
+                    width={480}
+                    height={128}
+                    className="object-contain"
+                    priority
+                  />
+                </div>
+                <div className="absolute top-0 right-0">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={toggleFullscreen}
+                  >
+                    {isFullscreen ? (
+                      <Minimize className="h-4 w-4" />
+                    ) : (
+                      <Maximize className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
               </div>
             </div>
 
