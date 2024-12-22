@@ -2,6 +2,7 @@ import './globals.css';
 import { Inter } from 'next/font/google';
 import { Providers } from '@/components/Providers';
 import { Metadata } from 'next';
+import { cn } from '@/lib/utils';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -57,7 +58,10 @@ export default function RootLayout({
         />
         <meta name="theme-color" content="#000000" />
       </head>
-      <body className={`${inter.className} min-h-screen bg-background`}>
+      <body className={cn(
+        inter.className,
+        'overflow-x-hidden relative'
+      )}>
         <Providers>
           {children}
         </Providers>

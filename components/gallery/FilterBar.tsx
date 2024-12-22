@@ -95,75 +95,79 @@ export function FilterBar({
   };
 
   const FilterControls = () => (
-    <div className="flex flex-col md:flex-row gap-4">
-      <Button
-        variant="outline"
-        className={cn(
-          "gap-2 w-full md:w-auto",
-          showFavorites && "bg-[#01d3c7]/10 hover:bg-[#01d3c7]/20"
-        )}
-        onClick={() => {
-          onToggleFavorites?.();
-          setIsDrawerOpen(false);
-        }}
-      >
-        <Heart className={cn(
-          "h-4 w-4",
-          showFavorites && "fill-[#01d3c7] text-[#01d3c7]"
-        )} />
-        Favorites ({favoritesCount})
-      </Button>
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col md:flex-row gap-4">
+        <div className="flex flex-col md:flex-row gap-4">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className={cn(
+                "w-full md:w-auto justify-start text-left font-normal",
+                !dateRange && "text-muted-foreground"
+              )}>
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {dateRange?.from ? (
+                  dateRange.to ? (
+                    <>
+                      {dateRange.from.toLocaleDateString()} - {dateRange.to.toLocaleDateString()}
+                    </>
+                  ) : (
+                    dateRange.from.toLocaleDateString()
+                  )
+                ) : (
+                  "Select date range"
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                initialFocus
+                mode="range"
+                defaultMonth={dateRange?.from}
+                selected={dateRange}
+                onSelect={handleDateRangeChange}
+                numberOfMonths={2}
+                id="date-range-calendar"
+              />
+            </PopoverContent>
+          </Popover>
 
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button variant="outline" className={cn(
-            "w-full md:w-auto justify-start text-left font-normal",
-            !dateRange && "text-muted-foreground"
-          )}>
-            <CalendarIcon className="mr-2 h-4 w-4" />
-            {dateRange?.from ? (
-              dateRange.to ? (
-                <>
-                  {dateRange.from.toLocaleDateString()} - {dateRange.to.toLocaleDateString()}
-                </>
-              ) : (
-                dateRange.from.toLocaleDateString()
-              )
-            ) : (
-              "Select date range"
-            )}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
-          <Calendar
-            initialFocus
-            mode="range"
-            defaultMonth={dateRange?.from}
-            selected={dateRange}
-            onSelect={handleDateRangeChange}
-            numberOfMonths={2}
-            id="date-range-calendar"
-          />
-        </PopoverContent>
-      </Popover>
-
-      {dateRange && (
-        <div className="flex items-center gap-4">
           <Button
-            variant="ghost"
-            onClick={clearFilters}
-            className="text-muted-foreground hover:text-foreground"
+            variant="outline"
+            className={cn(
+              "gap-2 md:w-auto",
+              showFavorites && "bg-[#01d3c7]/10 hover:bg-[#01d3c7]/20"
+            )}
+            onClick={() => {
+              onToggleFavorites?.();
+              setIsDrawerOpen(false);
+            }}
           >
-            <XCircleIcon className="h-4 w-4 mr-2" />
-            Clear Filters
+            <Heart className={cn(
+              "h-4 w-4",
+              showFavorites && "fill-[#01d3c7] text-[#01d3c7]"
+            )} />
+            Favorites ({favoritesCount})
           </Button>
-          {totalCount !== undefined && (
-            <span className="text-sm text-muted-foreground">
-              {totalCount.toLocaleString()} {totalCount === 1 ? 'image' : 'images'}
-            </span>
-          )}
         </div>
-      )}
+
+        {dateRange && (
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              onClick={clearFilters}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <XCircleIcon className="h-4 w-4 mr-2" />
+              Clear Filters
+            </Button>
+            {totalCount !== undefined && (
+              <span className="text-sm text-muted-foreground">
+                {totalCount.toLocaleString()} {totalCount === 1 ? 'image' : 'images'}
+              </span>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 

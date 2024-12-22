@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, Cloud, Thermometer, Wind, Home, Images } from 'lucide-react';
 import { format, subDays, startOfDay, endOfDay } from 'date-fns';
 import { DateRange } from 'react-day-picker';
 import {
@@ -23,7 +23,6 @@ import {
 import { fetchWeatherData, type WeatherResponse, type WeatherInterval, type WeatherRecords } from '@/lib/weather-api';
 import { cn } from '@/lib/utils';
 import { WeatherRecordCard } from '@/components/weather/WeatherRecordCard';
-import { Thermometer, Wind, Home, Images } from 'lucide-react';
 import { fetchWeatherRecords } from '@/lib/weather-api';
 import { useRouter } from 'next/navigation';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -108,52 +107,34 @@ export default function WeatherPage() {
     <main className="min-h-screen flex flex-col">
       <Header />
       
-      <div className="flex-1 container mx-auto px-4 py-8 pb-[80px] md:pb-8">
-        <Tabs defaultValue="weather" className="h-full flex flex-col">
-          {/* Tabs list - hidden on mobile, shown on desktop */}
-          <div className="hidden md:block">
-            <TabsList>
-              <TabsTrigger value="home" className="gap-2" onClick={() => router.push('/')}>
-                <Home className="h-4 w-4" />
+      <div className="hidden md:block border-b">
+        <div className="container mx-auto">
+          <Tabs defaultValue="weather">
+            <TabsList className="w-full justify-center h-14">
+              <TabsTrigger value="home" className="gap-2 text-base px-6" onClick={() => router.push('/')}>
+                <Home className="h-5 w-5" />
                 Home
               </TabsTrigger>
-              <TabsTrigger value="gallery" className="gap-2" onClick={() => router.push('/gallery')}>
-                <Images className="h-4 w-4" />
+              <TabsTrigger value="gallery" className="gap-2 text-base px-6" onClick={() => router.push('/gallery')}>
+                <Images className="h-5 w-5" />
                 Gallery
               </TabsTrigger>
-              <TabsTrigger value="weather" className="gap-2">
-                <LineChart className="h-4 w-4" />
+              <TabsTrigger value="weather" className="gap-2 text-base px-6">
+                <Cloud className="h-5 w-5" />
                 Weather
               </TabsTrigger>
             </TabsList>
-          </div>
+          </Tabs>
+        </div>
+      </div>
 
+      <div className="flex-1 container mx-auto px-4 py-6">
+        <Tabs defaultValue="weather" className="h-full flex flex-col">
           <TabsContent value="weather" className="flex-1">
             <div className="space-y-8">
               <section>
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-                  <h2 className="text-2xl font-semibold">Weather Trends</h2>
+                <div className="sticky top-0 bg-background/80 backdrop-blur-sm z-20 py-4">
                   <div className="flex flex-col md:flex-row gap-4">
-                    <div className="flex gap-2">
-                      <Button
-                        variant={interval === 'hour' ? 'default' : 'outline'}
-                        onClick={() => setInterval('hour')}
-                      >
-                        Hourly
-                      </Button>
-                      <Button
-                        variant={interval === 'day' ? 'default' : 'outline'}
-                        onClick={() => setInterval('day')}
-                      >
-                        Daily
-                      </Button>
-                      <Button
-                        variant={interval === 'week' ? 'default' : 'outline'}
-                        onClick={() => setInterval('week')}
-                      >
-                        Weekly
-                      </Button>
-                    </div>
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button variant="outline" className={cn(
@@ -175,7 +156,7 @@ export default function WeatherPage() {
                           )}
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="end">
+                      <PopoverContent className="w-auto p-0" align="start">
                         <Calendar
                           initialFocus
                           mode="range"
@@ -186,10 +167,31 @@ export default function WeatherPage() {
                         />
                       </PopoverContent>
                     </Popover>
+
+                    <div className="flex gap-2">
+                      <Button
+                        variant={interval === 'hour' ? 'default' : 'outline'}
+                        onClick={() => setInterval('hour')}
+                      >
+                        Hourly
+                      </Button>
+                      <Button
+                        variant={interval === 'day' ? 'default' : 'outline'}
+                        onClick={() => setInterval('day')}
+                      >
+                        Daily
+                      </Button>
+                      <Button
+                        variant={interval === 'week' ? 'default' : 'outline'}
+                        onClick={() => setInterval('week')}
+                      >
+                        Weekly
+                      </Button>
+                    </div>
                   </div>
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-6">
+                <div className="grid md:grid-cols-2 gap-6 mt-6">
                   <Card>
                     <CardHeader>
                       <CardTitle>Temperature</CardTitle>
@@ -357,8 +359,8 @@ export default function WeatherPage() {
 
       {/* Mobile bottom navigation */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 border-t bg-background/80 backdrop-blur-sm">
-        <nav className="container mx-auto px-4">
-          <div className="flex justify-around py-4">
+        <nav className="w-full max-w-screen-xl mx-auto">
+          <div className="flex justify-around items-center py-4 px-2">
             <button 
               onClick={() => router.push('/')}
               className="flex flex-col items-center gap-1 text-xs font-medium text-muted-foreground"
@@ -377,7 +379,7 @@ export default function WeatherPage() {
               onClick={() => router.push('/weather')}
               className="flex flex-col items-center gap-1 text-xs font-medium text-primary"
             >
-              <LineChart className="h-5 w-5" />
+              <Cloud className="h-5 w-5" />
               <span>Weather</span>
             </button>
           </div>

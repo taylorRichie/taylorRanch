@@ -11,8 +11,10 @@ import { useFavorites } from '@/hooks/useFavorites';
 import { Header } from '@/components/layout/Header';
 import { useRouter } from 'next/navigation';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Home, Images, LineChart } from 'lucide-react';
+import { Home, Images, Cloud } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { FilterIcon } from 'lucide-react';
 
 export default function GalleryPage() {
   const router = useRouter();
@@ -34,6 +36,17 @@ export default function GalleryPage() {
   
   const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null);
   const [showFavorites, setShowFavorites] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  // Check if any filters are active
+  const hasActiveFilters = useMemo(() => {
+    return !!(
+      filters.start_date ||
+      filters.end_date ||
+      filters.location ||
+      showFavorites
+    );
+  }, [filters.start_date, filters.end_date, filters.location, showFavorites]);
 
   // Sync favorites state with URL hash
   useEffect(() => {
@@ -82,37 +95,81 @@ export default function GalleryPage() {
     <main className="min-h-screen flex flex-col">
       <Header />
       
-      <div className="flex-1 container mx-auto px-4 py-8 pb-[80px] md:pb-8">
-        <Tabs defaultValue="gallery" className="h-full flex flex-col">
-          {/* Tabs list - hidden on mobile, shown on desktop */}
-          <div className="hidden md:block">
-            <TabsList>
-              <TabsTrigger value="home" className="gap-2" onClick={() => router.push('/')}>
-                <Home className="h-4 w-4" />
+      <div className="hidden md:block border-b">
+        <div className="container mx-auto">
+          <Tabs defaultValue="gallery">
+            <TabsList className="w-full justify-center h-14">
+              <TabsTrigger value="home" className="gap-2 text-base px-6" onClick={() => router.push('/')}>
+                <Home className="h-5 w-5" />
                 Home
               </TabsTrigger>
-              <TabsTrigger value="gallery" className="gap-2">
-                <Images className="h-4 w-4" />
+              <TabsTrigger value="gallery" className="gap-2 text-base px-6">
+                <Images className="h-5 w-5" />
                 Gallery
               </TabsTrigger>
-              <TabsTrigger value="weather" className="gap-2" onClick={() => router.push('/weather')}>
-                <LineChart className="h-4 w-4" />
+              <TabsTrigger value="weather" className="gap-2 text-base px-6" onClick={() => router.push('/weather')}>
+                <Cloud className="h-5 w-5" />
                 Weather
               </TabsTrigger>
             </TabsList>
-          </div>
+          </Tabs>
+        </div>
+      </div>
 
+      <div className="flex-1 container mx-auto px-4 py-6">
+        <Tabs defaultValue="gallery" className="h-full flex flex-col">
           <TabsContent value="gallery" className="flex-1">
-            <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-semibold">Gallery</h1>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowFavorites(!showFavorites)}
-                >
-                  {showFavorites ? 'Show All' : 'Show Favorites'}
-                </Button>
+            <div className="space-y-4">
+              {/* Header with controls */}
+              <div className="sticky top-0 bg-background/80 backdrop-blur-sm z-20">
+                <div className="flex justify-between items-center">
+                  <div className="md:flex-1">
+                    <div className="md:hidden">
+                      <Sheet open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
+                        <SheetTrigger asChild>
+                          <Button variant="ghost" size="icon" className="relative">
+                            <FilterIcon className="h-5 w-5" />
+                            {hasActiveFilters && (
+                              <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-primary" />
+                            )}
+                          </Button>
+                        </SheetTrigger>
+                        <SheetContent side="left">
+                          <SheetHeader>
+                            <SheetTitle>Filters</SheetTitle>
+                          </SheetHeader>
+                          <div className="mt-4">
+                            <FilterBar
+                              onFilterChange={handleFilterChange}
+                              locations={locations}
+                              currentFilters={filters}
+                              showFavorites={showFavorites}
+                              onToggleFavorites={() => handleToggleFavorites(!showFavorites)}
+                              totalCount={filteredImages.length}
+                            />
+                          </div>
+                        </SheetContent>
+                      </Sheet>
+                    </div>
+                    <div className="hidden md:block">
+                      <FilterBar
+                        onFilterChange={handleFilterChange}
+                        locations={locations}
+                        currentFilters={filters}
+                        showFavorites={showFavorites}
+                        onToggleFavorites={() => handleToggleFavorites(!showFavorites)}
+                        totalCount={filteredImages.length}
+                      />
+                    </div>
+                  </div>
+                  <SortControls
+                    onSortChange={handleFilterChange}
+                    currentSort={{
+                      sort_by: filters.sort_by || 'capture_time',
+                      sort_order: filters.sort_order || 'desc'
+                    }}
+                  />
+                </div>
               </div>
 
               <ImageGrid
@@ -128,8 +185,8 @@ export default function GalleryPage() {
 
       {/* Mobile bottom navigation */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 border-t bg-background/80 backdrop-blur-sm">
-        <nav className="container mx-auto px-4">
-          <div className="flex justify-around py-4">
+        <nav className="w-full max-w-screen-xl mx-auto">
+          <div className="flex justify-around items-center py-4 px-2">
             <button 
               onClick={() => router.push('/')}
               className="flex flex-col items-center gap-1 text-xs font-medium text-muted-foreground"
@@ -148,7 +205,7 @@ export default function GalleryPage() {
               onClick={() => router.push('/weather')}
               className="flex flex-col items-center gap-1 text-xs font-medium text-muted-foreground"
             >
-              <LineChart className="h-5 w-5" />
+              <Cloud className="h-5 w-5" />
               <span>Weather</span>
             </button>
           </div>
