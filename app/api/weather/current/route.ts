@@ -1,15 +1,29 @@
 import { NextResponse } from 'next/server';
 
-// Use environment variable, with a clear error if it's missing
 const OPENWEATHER_API_KEY = process.env.OPENWEATHER_API_KEY;
 const LAT = '40.3207';
 const LON = '-111.0166';
 
-if (!OPENWEATHER_API_KEY) {
-  throw new Error('OPENWEATHER_API_KEY is not defined in environment variables');
-}
-
 export async function GET() {
+  if (!OPENWEATHER_API_KEY) {
+    console.warn('OpenWeatherMap API key not configured in environment variables');
+    return NextResponse.json({
+      main: {
+        temp: 0,
+        feels_like: 0
+      },
+      wind: {
+        speed: 0,
+        deg: 0
+      },
+      weather: [{
+        main: "Unknown",
+        description: "Weather data unavailable"
+      }],
+      dt: Date.now() / 1000
+    });
+  }
+
   const url = `https://api.openweathermap.org/data/3.0/onecall?lat=${LAT}&lon=${LON}&units=imperial&appid=${OPENWEATHER_API_KEY}`;
   
   try {

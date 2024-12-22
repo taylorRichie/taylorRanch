@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, Thermometer, Wind } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import Image from 'next/image';
 
 interface GalleryImage {
   id: number;
@@ -111,10 +112,13 @@ export function ImageCarousel() {
 
         {/* Image */}
         <div className="relative aspect-video">
-          <img
+          <Image
             src={currentImage.cdn_url}
             alt={`Captured at ${currentImage.location}`}
-            className="object-cover w-full h-full rounded-md"
+            fill
+            className="object-cover rounded-md"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            priority
           />
           
           {/* Navigation buttons */}
