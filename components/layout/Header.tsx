@@ -3,17 +3,12 @@
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { useTheme } from "next-themes";
 import Image from "next/image";
-import Link from "next/link";
 import { useEffect, useState } from "react";
-import { LineChart, Images } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { usePathname } from "next/navigation";
+import { LiveWeather } from '@/components/weather/LiveWeather';
 
 export function Header() {
   const { theme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const pathname = usePathname();
-  const isWeatherPage = pathname === '/weather';
 
   useEffect(() => {
     setMounted(true);
@@ -24,38 +19,29 @@ export function Header() {
     : "https://revealgallery.nyc3.cdn.digitaloceanspaces.com/images/TaylorRanch.png";
 
   return (
-    <header className="w-full border-b bg-background/80 backdrop-blur-sm [.detail-view_&]:portrait:hidden">
-      <div className="absolute top-6 right-6 flex flex-col gap-2">
-        <ThemeToggle />
-        <Button
-          variant="ghost"
-          size="icon"
-          asChild
-          className="h-10 w-10"
-        >
-          {isWeatherPage ? (
-            <Link href="/">
-              <Images className="h-[1.2rem] w-[1.2rem]" />
-              <span className="sr-only">Gallery</span>
-            </Link>
-          ) : (
-            <Link href="/weather">
-              <LineChart className="h-[1.2rem] w-[1.2rem]" />
-              <span className="sr-only">Weather Trends</span>
-            </Link>
-          )}
-        </Button>
-      </div>
-      <div className="h-[180px] flex items-center justify-center">
-        <div className="w-[240px]">
-          <Image
-            src={logoUrl}
-            alt="Taylor Ranch"
-            width={480}
-            height={128}
-            className="object-contain"
-            priority
-          />
+    <header className="border-b">
+      <div className="container mx-auto px-4">
+        <div className="relative flex flex-col items-center py-6">
+          {/* Theme toggle - absolute positioned */}
+          <div className="absolute right-0 top-6">
+            <ThemeToggle />
+          </div>
+
+          {/* Logo - centered with responsive sizing */}
+          <div className="w-[540px] h-[180px] md:w-[640px] md:h-[210px] relative">
+            <Image
+              src={logoUrl}
+              alt="Taylor Ranch"
+              fill
+              priority
+              className="object-contain"
+            />
+          </div>
+
+          {/* Weather - below logo on mobile, right side on desktop */}
+          <div className="w-full md:absolute md:right-0 md:top-16 md:w-auto mt-4 md:mt-0">
+            <LiveWeather />
+          </div>
         </div>
       </div>
     </header>

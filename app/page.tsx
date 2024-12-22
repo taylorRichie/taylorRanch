@@ -1,128 +1,84 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
-import { FilterBar } from '@/components/gallery/FilterBar';
-import { SortControls } from '@/components/gallery/SortControls';
-import { ImageGrid } from '@/components/gallery/ImageGrid';
-import { ImageDetail } from '@/components/gallery/ImageDetail';
-import { useGallery } from '@/hooks/useGallery';
-import { GalleryImage, ImageFilters } from '@/lib/api';
-import { useFavorites } from '@/hooks/useFavorites';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { ImageCarousel } from '@/components/gallery/ImageCarousel';
+import { WeatherSnapshot } from '@/components/weather/WeatherSnapshot';
+import { Home, Images, LineChart } from 'lucide-react';
 
-export default function Home() {
-  const {
-    images,
-    locations,
-    loading: galleryLoading,
-    error: galleryError,
-    filters,
-    updateFilters,
-    resetFilters,
-    loadMore,
-    hasMore,
-    pagination
-  } = useGallery();
+export default function LandingPage() {
+  const router = useRouter();
 
-  const { favorites, isInitialized } = useFavorites();
-  
-  const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null);
-  const [showFavorites, setShowFavorites] = useState(false);
-
-  // Sync favorites state with URL hash
-  useEffect(() => {
-    const handleHashChange = () => {
-      setShowFavorites(window.location.hash === '#favorites');
-    };
-
-    // Set initial state
-    handleHashChange();
-
-    // Listen for hash changes
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
-  }, []);
-
-  const handleImageClick = (image: GalleryImage) => {
-    setSelectedImage(image);
+  const handleTabChange = (value: string) => {
+    switch (value) {
+      case 'gallery':
+        router.push('/gallery');
+        break;
+      case 'weather':
+        router.push('/weather');
+        break;
+      // Home tab stays on the current page
+    }
   };
-
-  const handleToggleFavorites = (newShowFavorites: boolean) => {
-    setShowFavorites(newShowFavorites);
-    window.location.hash = newShowFavorites ? '#favorites' : '';
-  };
-
-  const handleFilterChange = (newFilters: Partial<ImageFilters>) => {
-    updateFilters(newFilters);
-  };
-
-  // Filter images for favorites view
-  const favoriteImages = useMemo(() => {
-    if (!isInitialized) return [];
-    return images.filter(image => favorites.includes(image.id));
-  }, [images, favorites, isInitialized]);
-
-  // Apply filters to either the main gallery or favorites
-  const filteredImages = showFavorites ? favoriteImages : images;
-
-  const currentIndex = selectedImage 
-    ? filteredImages.findIndex(img => img.id === selectedImage.id) 
-    : -1;
-
-  const loading = galleryLoading;
-  const error = galleryError;
 
   return (
-    <main className="min-h-screen">
+    <main className="min-h-screen flex flex-col">
       <Header />
-      <div className="sticky top-0 z-50 bg-background/80 backdrop-blur-sm border-b">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between gap-4">
-            <FilterBar 
-              onFilterChange={handleFilterChange}
-              locations={locations}
-              currentFilters={filters}
-              showFavorites={showFavorites}
-              onToggleFavorites={() => handleToggleFavorites(!showFavorites)}
-              totalCount={showFavorites ? filteredImages.length : pagination?.total}
-            />
-            
-            {/* Sort Controls - Always visible */}
-            <SortControls 
-              onSortChange={(sort) => handleFilterChange(sort)}
-              currentSort={{
-                sort_by: filters.sort_by || 'capture_time',
-                sort_order: filters.sort_order || 'desc'
-              }}
-            />
+      
+      <div className="flex-1 container mx-auto px-4 py-8 pb-[80px] md:pb-8">
+        <Tabs defaultValue="home" className="h-full flex flex-col" onValueChange={handleTabChange}>
+          <div className="hidden md:block">
+            <TabsList>
+              <TabsTrigger value="home" className="gap-2">
+                <Home className="h-4 w-4" />
+                Home
+              </TabsTrigger>
+              <TabsTrigger value="gallery" className="gap-2">
+                <Images className="h-4 w-4" />
+                Gallery
+              </TabsTrigger>
+              <TabsTrigger value="weather" className="gap-2">
+                <LineChart className="h-4 w-4" />
+                Weather
+              </TabsTrigger>
+            </TabsList>
           </div>
-        </div>
+
+          <TabsContent value="home" className="flex-1">
+            <ImageCarousel />
+          </TabsContent>
+        </Tabs>
       </div>
 
-      <div className="container mx-auto px-4 py-6 space-y-8">
-        <ImageGrid 
-          images={filteredImages}
-          onImageClick={handleImageClick}
-          isLoading={loading}
-          onLoadMore={loadMore}
-          hasMore={!showFavorites && hasMore}
-        />
+      <div className="md:hidden fixed bottom-0 left-0 right-0 border-t bg-background/80 backdrop-blur-sm">
+        <nav className="container mx-auto px-4">
+          <div className="flex justify-around py-4">
+            <button 
+              onClick={() => router.push('/')}
+              className="flex flex-col items-center gap-1 text-xs font-medium text-muted-foreground"
+            >
+              <Home className="h-5 w-5" />
+              <span>Home</span>
+            </button>
+            <button 
+              onClick={() => router.push('/gallery')}
+              className="flex flex-col items-center gap-1 text-xs font-medium text-muted-foreground"
+            >
+              <Images className="h-5 w-5" />
+              <span>Gallery</span>
+            </button>
+            <button 
+              onClick={() => router.push('/weather')}
+              className="flex flex-col items-center gap-1 text-xs font-medium text-muted-foreground"
+            >
+              <LineChart className="h-5 w-5" />
+              <span>Weather</span>
+            </button>
+          </div>
+        </nav>
       </div>
-
-      {selectedImage && (
-        <ImageDetail
-          image={selectedImage}
-          onClose={() => setSelectedImage(null)}
-          onNext={currentIndex < filteredImages.length - 1 
-            ? () => setSelectedImage(filteredImages[currentIndex + 1])
-            : undefined}
-          onPrevious={currentIndex > 0
-            ? () => setSelectedImage(filteredImages[currentIndex - 1])
-            : undefined}
-          showNext={currentIndex < filteredImages.length - 1}
-          showPrevious={currentIndex > 0}
-        />
-      )}
     </main>
   );
 }

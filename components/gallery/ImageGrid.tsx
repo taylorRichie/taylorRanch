@@ -3,78 +3,50 @@
 import { GalleryImage } from "@/lib/api";
 import { useEffect, useRef, useState } from "react";
 import { ImageCard } from "./ImageCard";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
 
 interface ImageGridProps {
   images: GalleryImage[];
   onImageClick: (image: GalleryImage) => void;
-  isLoading?: boolean;
-  onLoadMore: () => void;
-  hasMore: boolean;
+  loading?: boolean;
+  error?: string | null;
 }
 
-export function ImageGrid({ images, onImageClick, isLoading, onLoadMore, hasMore }: ImageGridProps) {
-  const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set());
-  const observerTarget = useRef<HTMLDivElement>(null);
-
-  const handleImageLoad = (id: number) => {
-    setLoadedImages(prev => new Set(prev).add(id));
-  };
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && !isLoading && hasMore) {
-          onLoadMore();
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    if (observerTarget.current) {
-      observer.observe(observerTarget.current);
-    }
-
-    return () => observer.disconnect();
-  }, [isLoading, hasMore, onLoadMore]);
-
-  if (images.length === 0 && !isLoading) {
+export function ImageGrid({ images, onImageClick, loading, error }: ImageGridProps) {
+  if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-        <p>No images found</p>
-        <p className="text-sm">Try adjusting your filters</p>
+      <div className="flex flex-col items-center justify-center py-12">
+        <Spinner size="lg" className="text-muted-foreground mb-4" />
+        <p className="text-sm text-muted-foreground">Loading images...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-muted-foreground">{error}</p>
+      </div>
+    );
+  }
+
+  if (images.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-muted-foreground">No images found</p>
       </div>
     );
   }
 
   return (
-    <>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {images.map((image) => (
-          <ImageCard
-            key={image.id}
-            image={image}
-            isLoaded={loadedImages.has(image.id)}
-            onLoad={() => handleImageLoad(image.id)}
-            onClick={() => onImageClick(image)}
-          />
-        ))}
-      </div>
-
-      <div 
-        ref={observerTarget} 
-        className="h-4 w-full my-8"
-      >
-        {isLoading && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {Array.from({ length: 4 }).map((_, index) => (
-              <div key={index} className="aspect-[4/3] rounded-lg overflow-hidden">
-                <Skeleton className="w-full h-full" />
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {images.map((image) => (
+        <ImageCard
+          key={image.id}
+          image={image}
+          onClick={() => onImageClick(image)}
+        />
+      ))}
+    </div>
   );
 }
