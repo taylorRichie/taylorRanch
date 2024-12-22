@@ -8,6 +8,7 @@ const nextConfig = {
   },
   experimental: {
     serverActions: true,
+    scrollRestoration: true,
   },
   async rewrites() {
     return [
