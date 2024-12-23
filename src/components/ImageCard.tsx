@@ -1,5 +1,5 @@
 import { ImageTags } from "@/components/gallery/ImageTags";
-import { GalleryImage } from '@/types/gallery';
+import { GalleryImage } from '@/lib/api';
 
 interface ImageCardProps {
   image: GalleryImage;
