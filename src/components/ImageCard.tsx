@@ -1,4 +1,4 @@
-import { ImageTags } from '@/components/ImageTags';
+import { ImageTags } from "@/components/gallery/ImageTags";
 import { GalleryImage } from '@/types/gallery';
 
 interface ImageCardProps {
