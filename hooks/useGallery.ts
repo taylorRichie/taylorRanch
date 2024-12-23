@@ -15,6 +15,7 @@ interface GalleryState {
   filters: ImageFilters;
   pagination: ImageResponse['pagination'] | null;
   hasMore: boolean;
+  isInitialized: boolean;
 }
 
 interface GalleryActions {
@@ -30,6 +31,7 @@ interface GalleryActions {
   updateFilters: (newFilters: Partial<ImageFilters>) => void;
   resetFilters: () => void;
   loadMore: () => Promise<void>;
+  setInitialized: (initialized: boolean) => void;
 }
 
 const defaultFilters: ImageFilters = {
@@ -51,6 +53,7 @@ export const useGalleryStore = create<GalleryState & GalleryActions>((set, get) 
   filters: defaultFilters,
   pagination: null,
   hasMore: true,
+  isInitialized: false,
 
   // Actions
   setDate: (date) => set({ date }),
@@ -66,6 +69,7 @@ export const useGalleryStore = create<GalleryState & GalleryActions>((set, get) 
   setError: (error) => set({ error }),
   setPagination: (pagination) => set({ pagination }),
   setHasMore: (hasMore) => set({ hasMore }),
+  setInitialized: (initialized) => set({ isInitialized: initialized }),
 
   updateFilters: (newFilters) => {
     set((state) => ({
@@ -126,7 +130,7 @@ export function useGallery() {
 
   // Load initial images when filters change
   useEffect(() => {
-    const { filters, setLoading, setError, setImages, setPagination, setHasMore } = useGalleryStore.getState();
+    const { filters, setLoading, setError, setImages, setPagination, setHasMore, setInitialized } = useGalleryStore.getState();
     
     const loadInitialImages = async () => {
       try {
@@ -136,6 +140,7 @@ export function useGallery() {
         setImages(response.images);
         setPagination(response.pagination || { page: 1, total_pages: 1, total: response.images.length, per_page: 20 });
         setHasMore(response.pagination?.page < (response.pagination?.total_pages || 0));
+        setInitialized(true);
       } catch (err) {
         setError('Failed to load images');
       } finally {

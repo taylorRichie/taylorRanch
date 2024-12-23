@@ -7,25 +7,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
 import { CalendarIcon, FilterIcon, XCircleIcon, Heart } from "lucide-react";
-import { Rabbit as RabbitIcon } from "@/components/icons/rabbit";
 import { useState, useMemo, useEffect } from "react";
 import { DateRange } from "react-day-picker";
-import { addDays } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Location, ImageFilters, AnimalTag } from "@/lib/api";
 import { useFavorites } from "@/hooks/useFavorites";
@@ -40,6 +24,9 @@ interface FilterBarProps {
   showFavorites?: boolean;
   onToggleFavorites?: () => void;
   totalCount?: number;
+  isMobile?: boolean;
+  loading?: boolean;
+  onClearFilters?: () => void;
 }
 
 export function FilterBar({ 
@@ -48,7 +35,10 @@ export function FilterBar({
   currentFilters = {},
   showFavorites = false,
   onToggleFavorites,
-  totalCount
+  totalCount,
+  isMobile = false,
+  loading = false,
+  onClearFilters
 }: FilterBarProps) {
   const { favorites, isInitialized } = useFavorites();
   const { animalFilters, setAnimalFilter } = useGallery();
@@ -103,158 +93,150 @@ export function FilterBar({
 
   const clearFilters = () => {
     setDateRange(undefined);
-    onFilterChange({
-      start_date: undefined,
-      end_date: undefined,
-      location: undefined,
-      sort_by: currentFilters?.sort_by,
-      sort_order: currentFilters?.sort_order
-    });
-    if (showFavorites) {
-      onToggleFavorites?.();
+    if (onClearFilters) {
+      onClearFilters();
+    } else {
+      onFilterChange({
+        start_date: undefined,
+        end_date: undefined,
+        location: undefined,
+        sort_by: currentFilters?.sort_by,
+        sort_order: currentFilters?.sort_order
+      });
+      if (showFavorites) {
+        onToggleFavorites?.();
+      }
     }
     setIsDrawerOpen(false);
   };
 
-  const FilterControls = () => (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="flex flex-col md:flex-row gap-4">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className={cn(
-                "w-full md:w-auto justify-start text-left font-normal",
-                !dateRange && "text-muted-foreground"
-              )}>
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {dateRange?.from ? (
-                  dateRange.to ? (
-                    <>
-                      {dateRange.from.toLocaleDateString()} - {dateRange.to.toLocaleDateString()}
-                    </>
-                  ) : (
-                    dateRange.from.toLocaleDateString()
-                  )
-                ) : (
-                  "Select date range"
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                initialFocus
-                mode="range"
-                defaultMonth={dateRange?.from}
-                selected={dateRange}
-                onSelect={handleDateRangeChange}
-                numberOfMonths={2}
-                id="date-range-calendar"
-              />
-            </PopoverContent>
-          </Popover>
-
-          <Button
-            variant="outline"
-            className={cn(
-              "gap-2 md:w-auto",
-              showFavorites && "bg-[#01d3c7]/10 hover:bg-[#01d3c7]/20"
-            )}
-            onClick={() => {
-              onToggleFavorites?.();
-              setIsDrawerOpen(false);
-            }}
-          >
-            <Heart className={cn(
-              "h-4 w-4",
-              showFavorites && "fill-[#01d3c7] text-[#01d3c7]"
-            )} />
-            Favorites ({favoritesCount})
-          </Button>
-
-          {availableTags.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {availableTags
-                .filter(tag => tag.name !== 'unknown')
-                .map((tag) => (
-                  <Button
-                    key={tag.name}
-                    variant="outline"
-                    size="sm"
-                    className={cn(
-                      animalFilters.includes(tag.name) && "bg-blue-100 text-blue-800 hover:bg-blue-100/80 dark:bg-blue-900 dark:text-blue-100"
-                    )}
-                    onClick={() => {
-                      setAnimalFilter(tag.name);
-                    }}
-                  >
-                    {tag.display}
-                  </Button>
-                ))}
-            </div>
-          )}
-        </div>
-
-        {(dateRange || showFavorites || animalFilters.length > 0) && (
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              onClick={clearFilters}
-              className="text-muted-foreground hover:text-foreground"
-            >
-              <XCircleIcon className="h-4 w-4 mr-2" />
-              Clear Filters
-            </Button>
-            {totalCount !== undefined && (
-              <span className="text-sm text-muted-foreground">
-                {totalCount.toLocaleString()} {totalCount === 1 ? 'image' : 'images'}
-              </span>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  );
+  // Add a useEffect to monitor drawer state changes
+  useEffect(() => {
+    console.log('Drawer state changed:', isDrawerOpen);
+  }, [isDrawerOpen]);
 
   return (
-    <div className="flex items-center gap-4">
-      {/* Mobile Filter Button and Drawer */}
-      <div className="md:hidden flex items-center gap-2">
-        <Sheet open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="relative">
-              <FilterIcon className="h-5 w-5" />
-              {(dateRange || showFavorites || animalFilters.length > 0) && (
-                <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-primary" />
+    <div className={cn(
+      "flex gap-4",
+      isMobile ? "flex-col" : "flex-row items-center"
+    )}>
+      {/* Date Picker */}
+      <div className={isMobile ? "w-full" : "w-auto"}>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button 
+              variant="outline" 
+              className={cn(
+                "justify-start text-left",
+                isMobile && "w-full"
+              )}
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {dateRange?.from ? (
+                dateRange.to ? (
+                  <>
+                    {dateRange.from.toLocaleDateString()} - {dateRange.to.toLocaleDateString()}
+                  </>
+                ) : (
+                  dateRange.from.toLocaleDateString()
+                )
+              ) : (
+                "Select date range"
               )}
             </Button>
-          </SheetTrigger>
-          <SheetContent side="left">
-            <SheetHeader>
-              <SheetTitle>Filters</SheetTitle>
-            </SheetHeader>
-            <div className="mt-4">
-              <FilterControls />
-            </div>
-          </SheetContent>
-        </Sheet>
-        
-        {(dateRange || showFavorites || animalFilters.length > 0) && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={clearFilters}
-            className="text-muted-foreground hover:text-foreground"
-          >
-            <XCircleIcon className="h-4 w-4 mr-2" />
-            Clear
-          </Button>
-        )}
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              initialFocus
+              mode="range"
+              defaultMonth={dateRange?.from}
+              selected={dateRange}
+              onSelect={handleDateRangeChange}
+              numberOfMonths={isMobile ? 1 : 2}
+            />
+          </PopoverContent>
+        </Popover>
       </div>
 
-      {/* Desktop Filter Controls */}
-      <div className="hidden md:block">
-        <FilterControls />
-      </div>
+      {/* Favorites Button */}
+      <Button
+        variant="outline"
+        className={cn(
+          "justify-start gap-2",
+          isMobile && "w-full",
+          showFavorites && "bg-[#01d3c7]/10 hover:bg-[#01d3c7]/20"
+        )}
+        onClick={() => {
+          onToggleFavorites?.();
+          setIsDrawerOpen(false);
+        }}
+      >
+        <Heart className={cn(
+          "h-4 w-4",
+          showFavorites && "fill-[#01d3c7] text-[#01d3c7]"
+        )} />
+        Favorites ({favoritesCount})
+      </Button>
+
+      {/* Animal Tags */}
+      {availableTags.length > 0 && (
+        <div className={cn(
+          "space-y-2",
+          !isMobile && "flex items-center gap-2 space-y-0"
+        )}>
+          {isMobile && <h3 className="text-sm font-medium text-muted-foreground">Animal Filters</h3>}
+          <div className={cn(
+            "grid gap-2",
+            isMobile ? "grid-cols-2" : "flex flex-row"
+          )}>
+            {availableTags
+              .filter(tag => tag.name !== 'unknown')
+              .map((tag) => (
+                <Button
+                  key={tag.name}
+                  variant="outline"
+                  size="sm"
+                  className={cn(
+                    animalFilters.includes(tag.name) && "bg-blue-100 text-blue-800 hover:bg-blue-100/80 dark:bg-blue-900 dark:text-blue-100"
+                  )}
+                  onClick={() => setAnimalFilter(tag.name)}
+                >
+                  {tag.display}
+                </Button>
+              ))}
+          </div>
+        </div>
+      )}
+
+      {/* Clear Filters - Only show in desktop view */}
+      {!isMobile && (dateRange || showFavorites || animalFilters.length > 0) && (
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            onClick={() => {
+              if (onClearFilters) {
+                onClearFilters();
+              } else {
+                clearFilters();
+              }
+            }}
+            className="text-muted-foreground hover:text-foreground"
+            disabled={loading}
+          >
+            <XCircleIcon className="h-4 w-4 mr-2" />
+            Clear Filters
+          </Button>
+          {totalCount !== undefined && (
+            <span className="text-sm text-muted-foreground">
+              {loading ? (
+                "Loading..."
+              ) : (
+                `${totalCount.toLocaleString()} ${totalCount === 1 ? 'image' : 'images'}`
+              )}
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
 }

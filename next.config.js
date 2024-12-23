@@ -6,10 +6,6 @@ const nextConfig = {
       'revealgallery.nyc3.digitaloceanspaces.com'
     ],
   },
-  experimental: {
-    serverActions: true,
-    scrollRestoration: true,
-  },
   async rewrites() {
     return [
       {
