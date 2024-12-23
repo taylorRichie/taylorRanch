@@ -7,7 +7,7 @@ import { create } from 'zustand';
 interface GalleryState {
   date: Date | null;
   showFavorites: boolean;
-  animalFilter: string | null;
+  animalFilters: string[];
   images: any[];
   locations: Location[];
   loading: boolean;
@@ -20,7 +20,7 @@ interface GalleryState {
 interface GalleryActions {
   setDate: (date: Date | null) => void;
   setShowFavorites: (show: boolean) => void;
-  setAnimalFilter: (animal: string | null) => void;
+  setAnimalFilter: (animal: string) => void;
   setImages: (images: any[]) => void;
   setLocations: (locations: Location[]) => void;
   setLoading: (loading: boolean) => void;
@@ -43,7 +43,7 @@ export const useGalleryStore = create<GalleryState & GalleryActions>((set, get) 
   // State
   date: null,
   showFavorites: false,
-  animalFilter: null,
+  animalFilters: [],
   images: [],
   locations: [],
   loading: false,
@@ -55,7 +55,11 @@ export const useGalleryStore = create<GalleryState & GalleryActions>((set, get) 
   // Actions
   setDate: (date) => set({ date }),
   setShowFavorites: (show) => set({ showFavorites: show }),
-  setAnimalFilter: (animal) => set({ animalFilter: animal }),
+  setAnimalFilter: (animal) => set((state) => ({
+    animalFilters: state.animalFilters.includes(animal)
+      ? state.animalFilters.filter(a => a !== animal)
+      : [...state.animalFilters, animal]
+  })),
   setImages: (images) => set({ images }),
   setLocations: (locations) => set({ locations }),
   setLoading: (loading) => set({ loading }),
@@ -141,6 +145,17 @@ export function useGallery() {
 
     loadInitialImages();
   }, [store.filters]);
+
+  // When animalFilter changes
+  useEffect(() => {
+    const { updateFilters } = useGalleryStore.getState();
+    
+    if (store.animalFilters.length > 0) {
+      updateFilters({ tag: store.animalFilters });
+    } else {
+      updateFilters({ tag: undefined });
+    }
+  }, [store.animalFilters]);
 
   return store;
 } 

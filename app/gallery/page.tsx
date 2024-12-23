@@ -6,7 +6,7 @@ import { SortControls } from '@/components/gallery/SortControls';
 import { ImageGrid } from '@/components/gallery/ImageGrid';
 import { ImageDetail } from '@/components/gallery/ImageDetail';
 import { useGallery } from '@/hooks/useGallery';
-import { GalleryImage, ImageFilters } from '@/lib/api';
+import { GalleryImage, ImageFilters, AnimalTag } from '@/lib/api';
 import { useFavorites } from '@/hooks/useFavorites';
 import { Header } from '@/components/layout/Header';
 import { useRouter } from 'next/navigation';
@@ -107,7 +107,7 @@ export default function GalleryPage() {
     .filter(image => {
       // Animal filter
       if (animalFilter) {
-        return image.tags?.some(tag => tag.name === animalFilter);
+        return image.tags?.some((tag: AnimalTag) => tag.name === animalFilter);
       }
       return true;
     });
