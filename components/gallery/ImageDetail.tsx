@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import * as FileSaver from 'file-saver';
 import { useTheme } from "next-themes";
 import { useFavorites } from "@/hooks/useFavorites";
+import { ImageTags } from "./ImageTags";
 
 interface FloatingHeartProps {
   x: number;
@@ -308,34 +309,40 @@ export function ImageDetail({
             {/* Mobile portrait footer */}
             <div className="portrait:block landscape:hidden md:hidden">
               <div className="bg-background/80 backdrop-blur-sm p-4">
-                <div className="flex flex-row gap-6">
-                  <div className="flex flex-col gap-2">
-                    <p className="text-sm font-medium">
-                      {format(new Date(image.capture_time), 'PPpp')}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {image.secondary_location 
-                        ? `${image.primary_location} - ${image.secondary_location}`
-                        : image.primary_location}
-                    </p>
+                <div className="flex flex-col gap-4">
+                  <div className="flex flex-row gap-6">
+                    <div className="flex flex-col gap-2">
+                      <p className="text-sm font-medium">
+                        {format(new Date(image.capture_time), 'PPpp')}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {image.secondary_location 
+                          ? `${image.primary_location} - ${image.secondary_location}`
+                          : image.primary_location}
+                      </p>
+                    </div>
+                    <div className="flex flex-col gap-3 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-2">
+                        <ThermometerIcon className="w-4 h-4" />
+                        <span>{image.temperature}°{image.temperature_unit}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Wind className="w-4 h-4" />
+                        <span>{image.wind_speed} {image.wind_unit} {image.wind_direction}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Cloud className="w-4 h-4" />
+                        <span>{image.raw_metadata.sun_status}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Moon className="w-4 h-4" />
+                        <span>{image.raw_metadata.moon_phase}</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex flex-col gap-3 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-2">
-                      <ThermometerIcon className="w-4 h-4" />
-                      <span>{image.temperature}°{image.temperature_unit}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Wind className="w-4 h-4" />
-                      <span>{image.wind_speed} {image.wind_unit} {image.wind_direction}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Cloud className="w-4 h-4" />
-                      <span>{image.raw_metadata.sun_status}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Moon className="w-4 h-4" />
-                      <span>{image.raw_metadata.moon_phase}</span>
-                    </div>
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-medium text-gray-500">Animals Detected</h3>
+                    <ImageTags tags={image.tags} />
                   </div>
                 </div>
               </div>
@@ -408,6 +415,10 @@ export function ImageDetail({
                     ? `${image.primary_location} - ${image.secondary_location}`
                     : image.primary_location}
                 </p>
+              </div>
+              <div className="mt-4">
+                <h3 className="text-sm font-medium text-gray-500 mb-2">Animals Detected</h3>
+                <ImageTags tags={image.tags} />
               </div>
               <div className="mt-4">
                 <div className="flex flex-col gap-2 text-sm text-muted-foreground">

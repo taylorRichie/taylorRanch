@@ -29,24 +29,26 @@ export default function GalleryPage() {
     resetFilters,
     loadMore,
     hasMore,
-    pagination
+    pagination,
+    date,
+    showFavorites,
+    animalFilter,
+    setShowFavorites
   } = useGallery();
 
   const { favorites, isInitialized } = useFavorites();
   
   const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null);
-  const [showFavorites, setShowFavorites] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   // Check if any filters are active
   const hasActiveFilters = useMemo(() => {
     return !!(
-      filters.start_date ||
-      filters.end_date ||
-      filters.location ||
-      showFavorites
+      date ||
+      showFavorites ||
+      animalFilter
     );
-  }, [filters.start_date, filters.end_date, filters.location, showFavorites]);
+  }, [date, showFavorites, animalFilter]);
 
   // Sync favorites state with URL hash
   useEffect(() => {
@@ -60,7 +62,7 @@ export default function GalleryPage() {
     // Listen for hash changes
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
-  }, []);
+  }, [setShowFavorites]);
 
   const handleImageClick = (image: GalleryImage) => {
     setSelectedImage(image);
@@ -82,7 +84,33 @@ export default function GalleryPage() {
   }, [images, favorites, isInitialized]);
 
   // Apply filters to either the main gallery or favorites
-  const filteredImages = showFavorites ? favoriteImages : images;
+  const filteredImages = images
+    .filter(image => {
+      // Date filter
+      if (date) {
+        const imageDate = new Date(image.capture_time);
+        return (
+          imageDate.getFullYear() === date.getFullYear() &&
+          imageDate.getMonth() === date.getMonth() &&
+          imageDate.getDate() === date.getDate()
+        );
+      }
+      return true;
+    })
+    .filter(image => {
+      // Favorites filter
+      if (showFavorites) {
+        return favorites.includes(image.id);
+      }
+      return true;
+    })
+    .filter(image => {
+      // Animal filter
+      if (animalFilter) {
+        return image.tags?.some(tag => tag.name === animalFilter);
+      }
+      return true;
+    });
 
   const currentIndex = selectedImage 
     ? filteredImages.findIndex(img => img.id === selectedImage.id) 

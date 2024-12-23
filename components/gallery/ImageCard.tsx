@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { GalleryImage } from "@/lib/api";
 import { useFavorites } from "@/hooks/useFavorites";
 import { format } from "date-fns";
+import { ImageTags } from "./ImageTags";
 
 interface FloatingHeartProps {
   x: number;
@@ -82,37 +83,40 @@ export function ImageCard({ image, onClick, isLoaded, onLoad }: ImageCardProps) 
           />
         </div>
       </CardContent>
-      <CardFooter className="p-4 flex justify-between items-center">
-        <div className="text-sm">
-          <p className="font-medium truncate">
-            {format(new Date(image.capture_time), 'MMM d, yyyy, h:mm:ss aa')}
-          </p>
-          <p className="text-muted-foreground truncate">
-            {image.secondary_location 
-              ? `${image.primary_location} - ${image.secondary_location}`
-              : image.primary_location}
-          </p>
-        </div>
-        <div className="relative">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-9 w-9 relative"
-            onClick={handleFavoriteClick}
-          >
-            <Heart className={cn(
-              "h-4 w-4 transition-colors",
-              isFavorite && "fill-[#01d3c7] text-[#01d3c7]"
-            )} />
-            {floatingHearts.map(heart => (
-              <FloatingHeart
-                key={heart.id}
-                x={0}
-                y={0}
-                onComplete={() => removeHeart(heart.id)}
-              />
-            ))}
-          </Button>
+      <CardFooter className="p-4 flex flex-col">
+        <div className="w-full flex justify-between items-start">
+          <div className="text-sm">
+            <p className="font-medium truncate">
+              {format(new Date(image.capture_time), 'MMM d, yyyy, h:mm:ss aa')}
+            </p>
+            <p className="text-muted-foreground truncate">
+              {image.secondary_location 
+                ? `${image.primary_location} - ${image.secondary_location}`
+                : image.primary_location}
+            </p>
+            <ImageTags tags={image.tags} />
+          </div>
+          <div className="relative">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 relative"
+              onClick={handleFavoriteClick}
+            >
+              <Heart className={cn(
+                "h-4 w-4 transition-colors",
+                isFavorite && "fill-[#01d3c7] text-[#01d3c7]"
+              )} />
+              {floatingHearts.map(heart => (
+                <FloatingHeart
+                  key={heart.id}
+                  x={0}
+                  y={0}
+                  onComplete={() => removeHeart(heart.id)}
+                />
+              ))}
+            </Button>
+          </div>
         </div>
       </CardFooter>
     </Card>

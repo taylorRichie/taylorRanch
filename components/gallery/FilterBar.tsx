@@ -21,7 +21,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { CalendarIcon, FilterIcon, XCircleIcon, Heart } from "lucide-react";
+import { CalendarIcon, FilterIcon, XCircleIcon, Heart, Deer, Rabbit } from "lucide-react";
 import { useState, useMemo } from "react";
 import { DateRange } from "react-day-picker";
 import { addDays } from "date-fns";
@@ -29,6 +29,7 @@ import { cn } from "@/lib/utils";
 import { Location, ImageFilters } from "@/lib/api";
 import { useFavorites } from "@/hooks/useFavorites";
 import { format } from "date-fns";
+import { useGallery } from "@/hooks/useGallery";
 
 interface FilterBarProps {
   onFilterChange: (filters: Partial<ImageFilters>) => void;
@@ -39,6 +40,12 @@ interface FilterBarProps {
   totalCount?: number;
 }
 
+const animalFilters = [
+  { name: 'deer', display: 'Deer', icon: Deer },
+  { name: 'rabbit', display: 'Rabbit', icon: Rabbit },
+  // We can add more animals as we discover them
+];
+
 export function FilterBar({ 
   onFilterChange, 
   locations, 
@@ -48,6 +55,7 @@ export function FilterBar({
   totalCount
 }: FilterBarProps) {
   const { favorites, isInitialized } = useFavorites();
+  const { animalFilter, setAnimalFilter } = useGallery();
   const [dateRange, setDateRange] = useState<DateRange | undefined>(() => {
     if (currentFilters?.start_date && currentFilters?.end_date) {
       return {
@@ -148,9 +156,26 @@ export function FilterBar({
             )} />
             Favorites ({favoritesCount})
           </Button>
+
+          <div className="flex gap-2">
+            {animalFilters.map((animal) => (
+              <Button
+                key={animal.name}
+                variant="outline"
+                className={cn(
+                  "gap-2",
+                  animalFilter === animal.name && "bg-blue-100 text-blue-800 hover:bg-blue-100/80 dark:bg-blue-900 dark:text-blue-100"
+                )}
+                onClick={() => setAnimalFilter(animalFilter === animal.name ? null : animal.name)}
+              >
+                {animal.icon && <animal.icon className="h-4 w-4" />}
+                {animal.display}
+              </Button>
+            ))}
+          </div>
         </div>
 
-        {dateRange && (
+        {(dateRange || showFavorites || animalFilter) && (
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
@@ -179,7 +204,7 @@ export function FilterBar({
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon" className="relative">
               <FilterIcon className="h-5 w-5" />
-              {(dateRange || showFavorites) && (
+              {(dateRange || showFavorites || animalFilter) && (
                 <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-primary" />
               )}
             </Button>
@@ -194,7 +219,7 @@ export function FilterBar({
           </SheetContent>
         </Sheet>
         
-        {(dateRange || showFavorites) && (
+        {(dateRange || showFavorites || animalFilter) && (
           <Button
             variant="ghost"
             size="sm"

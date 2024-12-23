@@ -1,6 +1,13 @@
 export const API_BASE_URL = '/api';
 
 // Types
+export interface AnimalTag {
+  type: 'animal';
+  name: string;
+  count: number;
+  display: string;
+}
+
 export interface GalleryImage {
   id: number;
   reveal_id: string;
@@ -22,6 +29,7 @@ export interface GalleryImage {
       unit: string;
     };
   };
+  tags?: AnimalTag[];
 }
 
 export interface ImageFilters {
