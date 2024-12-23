@@ -1,5 +1,5 @@
 import { ImageTags } from "@/components/gallery/ImageTags";
-import WeatherData from '@/components/WeatherData';
+import WeatherData from '@/components/weather/WeatherData';
 import { formatDate } from '@/lib/utils';
 import Image from 'next/image';
 
