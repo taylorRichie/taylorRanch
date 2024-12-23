@@ -2,9 +2,10 @@ export const API_BASE_URL = '/api';
 
 // Types
 export interface AnimalTag {
+  type: 'animal';
   name: string;
-  count: string;
-  display?: string;
+  count: number;
+  display: string;
 }
 
 export interface GalleryImage {
@@ -167,9 +168,11 @@ export async function fetchAnimalTags(): Promise<AnimalTag[]> {
     console.log('Received tags data:', data);
 
     // Transform the data to include display names
-    const transformedTags = data.tags.map((tag: AnimalTag) => ({
-      ...tag,
-      display: tag.name.charAt(0).toUpperCase() + tag.name.slice(1) // Capitalize first letter
+    const transformedTags = data.tags.map((tag: any) => ({
+      type: 'animal',
+      name: tag.name,
+      count: parseInt(tag.count, 10),
+      display: tag.name.charAt(0).toUpperCase() + tag.name.slice(1)
     }));
 
     return transformedTags;
