@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { FilterBar } from '@/components/gallery/FilterBar';
 import { SortControls } from '@/components/gallery/SortControls';
 import { ImageGrid } from '@/components/gallery/ImageGrid';
 import { ImageDetail } from '@/components/gallery/ImageDetail';
 import { useGallery, useGalleryStore } from '@/hooks/useGallery';
-import { GalleryImage, ImageFilters, AnimalTag } from '@/lib/api';
+import { GalleryImage, ImageFilters, AnimalTag, fetchImages } from '@/lib/api';
 import { useFavorites } from '@/hooks/useFavorites';
 import { Header } from '@/components/layout/Header';
 import { useRouter } from 'next/navigation';
@@ -162,6 +162,66 @@ export default function GalleryPage() {
     setIsDrawerOpen(false);
   };
 
+  const handleImageUpdate = (updatedImage: GalleryImage) => {
+    // Update the image in the filtered images array
+    const updatedImages = filteredImages.map(img => 
+      img.id === updatedImage.id ? updatedImage : img
+    );
+    
+    // Update the main images array
+    const newImages = images.map(img => 
+      img.id === updatedImage.id ? updatedImage : img
+    );
+
+    // Update both arrays
+    setFilteredImages(updatedImages);
+    setImages(newImages);
+  };
+
+  const refreshGallery = useCallback(async () => {
+    try {
+      // Get current filters and store actions
+      const { 
+        filters,
+        setLoading,
+        setError,
+        setImages,
+        setPagination,
+        setHasMore,
+        setInitialized 
+      } = useGalleryStore.getState();
+      
+      setLoading(true);
+      setError(null);
+
+      // Fetch images with current filters
+      const response = await fetchImages({
+        ...filters,
+        page: 1,
+        per_page: 20,
+        sort_by: filters.sort_by || 'capture_time',
+        sort_order: filters.sort_order || 'desc'
+      });
+
+      if (response) {
+        setImages(response.images);
+        setPagination(response.pagination || { 
+          page: 1, 
+          total_pages: 1, 
+          total: response.images.length, 
+          per_page: 20 
+        });
+        setHasMore(response.pagination?.page < (response.pagination?.total_pages || 0));
+        setInitialized(true);
+      }
+    } catch (err) {
+      console.error('Failed to refresh gallery:', err);
+      useGalleryStore.getState().setError('Failed to load images');
+    } finally {
+      useGalleryStore.getState().setLoading(false);
+    }
+  }, []);
+
   return (
     <main className="min-h-screen flex flex-col">
       <Header />
@@ -193,7 +253,7 @@ export default function GalleryPage() {
             <div className="space-y-4">
               {/* Header with controls */}
               <div className="sticky top-0 bg-background/80 backdrop-blur-sm z-20">
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between items-center py-4">
                   <div className="md:flex-1">
                     <div className="md:hidden flex items-center gap-2">
                       <Sheet open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
@@ -343,6 +403,7 @@ export default function GalleryPage() {
           onNext={currentIndex < filteredImages.length - 1 ? () => setSelectedImage(filteredImages[currentIndex + 1]) : undefined}
           showPrevious={currentIndex > 0}
           showNext={currentIndex < filteredImages.length - 1}
+          onRefreshGallery={refreshGallery}
         />
       )}
     </main>

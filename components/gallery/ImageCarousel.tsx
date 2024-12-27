@@ -7,18 +7,7 @@ import { ChevronLeft, ChevronRight, Thermometer, Wind } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import Image from 'next/image';
-
-interface GalleryImage {
-  id: number;
-  capture_time: string;
-  cdn_url: string;
-  location: string;
-  temperature: number;
-  temperature_unit: string;
-  wind_speed: number;
-  wind_direction: string;
-  wind_unit: string;
-}
+import { fetchImages, GalleryImage } from '@/lib/api';
 
 export function ImageCarousel() {
   const [images, setImages] = useState<GalleryImage[]>([]);
@@ -27,21 +16,25 @@ export function ImageCarousel() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch('/api/gallery/recent')
-      .then(res => {
-        if (!res.ok) throw new Error('Failed to fetch images');
-        return res.json();
-      })
-      .then(data => {
-        if (data.images && Array.isArray(data.images)) {
-          setImages(data.images);
-        }
-      })
-      .catch(err => {
-        console.error('Error loading images:', err);
-        setError(err.message);
-      })
-      .finally(() => setLoading(false));
+    const loadImages = async () => {
+      setLoading(true);
+      try {
+        const response = await fetchImages({
+          page: 1,
+          per_page: 10,
+          sort_by: 'capture_time',
+          sort_order: 'desc'
+        });
+        setImages(response.images);
+      } catch (error) {
+        console.error('Failed to load carousel images:', error);
+        setError('Failed to load images');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadImages();
   }, []);
 
   const nextImage = () => {
@@ -87,46 +80,47 @@ export function ImageCarousel() {
       <CardHeader>
         <CardTitle>Recent Images</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Location, Date, and Weather */}
-        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-2">
-          <div className="space-y-1">
-            <p className="text-sm font-medium">
-              {currentImage.location}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              {format(new Date(currentImage.capture_time), 'PPp')}
-            </p>
-          </div>
-          <div className="flex gap-4 text-sm text-muted-foreground">
-            <div className="flex items-center gap-1">
-              <Thermometer className="h-4 w-4" />
-              <span>{currentImage.temperature}°{currentImage.temperature_unit}</span>
+      <CardContent className="p-0">
+        <div className="px-6 pb-4">
+          <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-2">
+            <div className="space-y-1">
+              <p className="text-sm font-medium">
+                {currentImage.primary_location}
+                {currentImage.secondary_location && ` - ${currentImage.secondary_location}`}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {format(new Date(currentImage.capture_time), 'PPp')}
+              </p>
             </div>
-            <div className="flex items-center gap-1">
-              <Wind className="h-4 w-4" />
-              <span>{currentImage.wind_speed} {currentImage.wind_unit} {currentImage.wind_direction}</span>
+            <div className="flex gap-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-1">
+                <Thermometer className="h-4 w-4" />
+                <span>{currentImage.temperature}°{currentImage.temperature_unit}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Wind className="h-4 w-4" />
+                <span>{currentImage.wind_speed} {currentImage.wind_unit} {currentImage.wind_direction}</span>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Image */}
-        <div className="relative aspect-video">
+        <div className="relative aspect-[4/3] w-full">
           <Image
             src={currentImage.cdn_url}
-            alt={`Captured at ${currentImage.location}`}
+            alt={`Captured at ${currentImage.primary_location}`}
             fill
-            className="object-cover rounded-md"
+            className="object-contain"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             priority
           />
           
-          {/* Navigation buttons */}
           <Button
             variant="ghost"
             size="icon"
             className={cn(
               "absolute left-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity",
+              "bg-background/80 hover:bg-background/90",
               currentIndex === 0 && "hidden"
             )}
             onClick={previousImage}
@@ -139,6 +133,7 @@ export function ImageCarousel() {
             size="icon"
             className={cn(
               "absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity",
+              "bg-background/80 hover:bg-background/90",
               currentIndex === images.length - 1 && "hidden"
             )}
             onClick={nextImage}

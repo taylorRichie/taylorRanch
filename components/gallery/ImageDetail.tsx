@@ -13,6 +13,7 @@ import * as FileSaver from 'file-saver';
 import { useTheme } from "next-themes";
 import { useFavorites } from "@/hooks/useFavorites";
 import { ImageTags } from "./ImageTags";
+import { useRouter } from 'next/navigation';
 
 interface FloatingHeartProps {
   x: number;
@@ -41,6 +42,8 @@ interface ImageDetailProps {
   onNext?: () => void;
   showPrevious?: boolean;
   showNext?: boolean;
+  onImageUpdate?: (updatedImage: GalleryImage) => void;
+  onRefreshGallery?: () => void;
 }
 
 export function ImageDetail({ 
@@ -50,6 +53,8 @@ export function ImageDetail({
   onNext,
   showPrevious = false,
   showNext = false,
+  onImageUpdate,
+  onRefreshGallery
 }: ImageDetailProps) {
   const { theme, resolvedTheme } = useTheme();
   const { favorites, toggleFavorite } = useFavorites();
@@ -60,6 +65,7 @@ export function ImageDetail({
   const [mounted, setMounted] = useState(false);
   const [floatingHearts, setFloatingHearts] = useState<{ id: number }[]>([]);
   const [nextHeartId, setNextHeartId] = useState(0);
+  const router = useRouter();
 
   useEffect(() => {
     setMounted(true);
@@ -230,6 +236,23 @@ export function ImageDetail({
     setFloatingHearts(hearts => hearts.filter(heart => heart.id !== heartId));
   }, []);
 
+  const handleTagRemoved = async () => {
+    if (image) {
+      try {
+        // First close the dialog
+        onClose();
+        
+        // Then navigate to gallery
+        router.push('/gallery');
+        
+        // Finally refresh the gallery data
+        onRefreshGallery?.();
+      } catch (error) {
+        console.error('Error handling tag removal:', error);
+      }
+    }
+  };
+
   if (!image) return null;
 
   return (
@@ -342,7 +365,11 @@ export function ImageDetail({
                   </div>
                   <div className="space-y-2">
                     <h3 className="text-sm font-medium text-gray-500">Animals Detected</h3>
-                    <ImageTags tags={image.tags} />
+                    <ImageTags 
+                      tags={image.tags} 
+                      imageId={image.id}
+                      onTagRemoved={handleTagRemoved}
+                    />
                   </div>
                 </div>
               </div>
@@ -418,7 +445,11 @@ export function ImageDetail({
               </div>
               <div className="mt-4">
                 <h3 className="text-sm font-medium text-gray-500 mb-2">Animals Detected</h3>
-                <ImageTags tags={image.tags} />
+                <ImageTags 
+                  tags={image.tags} 
+                  imageId={image.id}
+                  onTagRemoved={handleTagRemoved}
+                />
               </div>
               <div className="mt-4">
                 <div className="flex flex-col gap-2 text-sm text-muted-foreground">

@@ -9,9 +9,29 @@ import { LiveWeather } from '@/components/weather/LiveWeather';
 export function Header() {
   const { theme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const [weather, setWeather] = useState<WeatherData | null>(null);
 
   useEffect(() => {
     setMounted(true);
+  }, []);
+
+  const fetchWeather = async () => {
+    try {
+      const response = await fetch('/api/weather');
+      const data = await response.json();
+      setWeather(data);
+    } catch (error) {
+      console.error('Failed to fetch weather:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchWeather(); // Initial fetch
+
+    // Refresh every 5 minutes
+    const interval = setInterval(fetchWeather, 5 * 60 * 1000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const logoUrl = mounted && (theme === "light" || resolvedTheme === "light")

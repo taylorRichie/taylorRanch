@@ -7,36 +7,20 @@ import { cn } from '@/lib/utils';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Reveal Gallery Weather',
-  description: 'Weather monitoring and historical data visualization',
-  manifest: '/manifest.json',
-  icons: {
-    icon: [
-      { url: 'https://revealgallery.nyc3.digitaloceanspaces.com/images/favicon/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
-      { url: 'https://revealgallery.nyc3.digitaloceanspaces.com/images/favicon/favicon-32x32.png', sizes: '32x32', type: 'image/png' }
-    ],
-    apple: [
-      { url: 'https://revealgallery.nyc3.digitaloceanspaces.com/images/favicon/apple-touch-icon.png' }
-    ],
-    other: [
-      {
-        rel: 'mask-icon',
-        url: 'https://revealgallery.nyc3.digitaloceanspaces.com/images/favicon/safari-pinned-tab.svg',
-        color: '#000000'
-      }
-    ]
-  },
+  title: 'Taylor Ranch',
+  description: 'Wildlife camera gallery and weather station',
   appleWebApp: {
     capable: true,
+    title: 'Taylor Ranch',
     statusBarStyle: 'default',
-    title: 'Reveal Gallery Weather'
+    startupImage: [
+      // Add startup images if needed
+    ],
   },
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false
-  }
+  applicationName: 'Taylor Ranch',
+  manifest: '/manifest.json',
+  themeColor: '#000000',
+  viewport: 'width=device-width, initial-scale=1, maximum-scale=1',
 };
 
 export default function RootLayout({
