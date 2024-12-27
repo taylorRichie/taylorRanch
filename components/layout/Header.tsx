@@ -5,6 +5,7 @@ import { useTheme } from "next-themes";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { LiveWeather } from '@/components/weather/LiveWeather';
+import { WeatherData } from '@/types/weather';
 
 export function Header() {
   const { theme, resolvedTheme } = useTheme();
