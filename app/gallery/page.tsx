@@ -163,19 +163,13 @@ export default function GalleryPage() {
   };
 
   const handleImageUpdate = (updatedImage: GalleryImage) => {
-    // Update the image in the filtered images array
-    const updatedImages = filteredImages.map(img => 
-      img.id === updatedImage.id ? updatedImage : img
-    );
-    
-    // Update the main images array
+    // Update the main images array only
     const newImages = images.map(img => 
       img.id === updatedImage.id ? updatedImage : img
     );
 
-    // Update both arrays
-    setFilteredImages(updatedImages);
-    setImages(newImages);
+    // Update images in the store
+    useGalleryStore.getState().setImages(newImages);
   };
 
   const refreshGallery = useCallback(async () => {
