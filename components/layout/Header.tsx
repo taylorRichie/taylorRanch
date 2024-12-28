@@ -18,7 +18,8 @@ export function Header() {
 
   const fetchWeather = async () => {
     try {
-      const response = await fetch('/api/weather');
+      const timestamp = new Date().getTime();
+      const response = await fetch(`/api/weather?_=${timestamp}`);
       const data = await response.json();
       setWeather(data);
     } catch (error) {
