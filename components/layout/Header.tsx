@@ -12,14 +12,15 @@ export function Header() {
   const [mounted, setMounted] = useState(false);
   const [weather, setWeather] = useState<WeatherData | null>(null);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
   const fetchWeather = async () => {
     try {
       const timestamp = new Date().getTime();
-      const response = await fetch(`/api/weather?_=${timestamp}`);
+      const response = await fetch(`/api/weather?_=${timestamp}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache'
+        }
+      });
       const data = await response.json();
       setWeather(data);
     } catch (error) {
@@ -28,12 +29,19 @@ export function Header() {
   };
 
   useEffect(() => {
-    fetchWeather(); // Initial fetch
+    setMounted(true);
+    fetchWeather();
+  }, []);
 
-    // Refresh every 5 minutes
-    const interval = setInterval(fetchWeather, 5 * 60 * 1000);
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchWeather();
+      }
+    };
 
-    return () => clearInterval(interval);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
 
   const logoUrl = mounted && (theme === "light" || resolvedTheme === "light")
