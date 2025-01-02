@@ -49,16 +49,16 @@ export function Header() {
     : "https://revealgallery.nyc3.cdn.digitaloceanspaces.com/images/TaylorRanch.png";
 
   return (
-    <header className="border-b">
-      <div className="container mx-auto px-4 relative">
-        {/* Theme toggle - absolute positioned to container edges */}
+    <header className="border-b w-full">
+      <div className="container mx-auto px-4 relative flex flex-col items-center">
+        {/* Theme toggle */}
         <div className="absolute right-2 top-2 z-50">
           <ThemeToggle />
         </div>
 
-        <div className="flex flex-col items-center py-6">
-          {/* Logo - centered with responsive sizing */}
-          <div className="w-[540px] h-[180px] md:w-[640px] md:h-[210px] relative z-10">
+        {/* Logo - full width and centered */}
+        <div className="w-full flex justify-center py-6">
+          <div className="w-full md:w-[640px] h-[180px] md:h-[210px] relative">
             <Image
               src={logoUrl}
               alt="Taylor Ranch"
@@ -67,11 +67,11 @@ export function Header() {
               className="object-contain"
             />
           </div>
+        </div>
 
-          {/* Weather - below logo on mobile, right side on desktop */}
-          <div className="w-full md:absolute md:right-8 md:top-16 md:w-auto mt-0 md:mt-0">
-            <LiveWeather />
-          </div>
+        {/* Weather */}
+        <div className="w-full flex justify-center md:justify-end md:absolute md:right-8 md:top-16 pb-4 md:pb-0">
+          <LiveWeather />
         </div>
       </div>
     </header>
